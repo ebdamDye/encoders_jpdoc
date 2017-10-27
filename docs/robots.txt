@@ -1,0 +1,2 @@
+User-agent: *
+Sitemap: https://ebdamdye.github.io/encoders_jpdoc/sitemap.xml

@@ -1,0 +1,2799 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<title>Linux で H.264/AAC エンコード</title>
+<!-- 2016-03-08 Tue 22:04:55 +0900 -->
+<meta  charset="utf-8">
+<meta  name="generator" content="Org-mode">
+<meta  name="author" content="ebdamDye">
+<meta  name="description" content="エンコーダの紹介とコマンドの例示、主要なオプションの解説"
+>
+<meta  name="keywords" content="H.264,AAC,x264,ffmpeg,mplayer,mencoder,nero,faac,fdk,qaac">
+<link rel="sitemap" type="application/xml" href="sitemap.xml">
+<link rel="stylesheet" type="text/css" href="public.css">
+<meta name=viewport content="width=device-width, initial-scale=1">
+<link rel="apple-touch-icon" sizes="57x57" href="icons/apple-touch-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="114x114" href="icons/apple-touch-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="72x72" href="icons/apple-touch-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="144x144" href="icons/apple-touch-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="60x60" href="icons/apple-touch-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="120x120" href="icons/apple-touch-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="76x76" href="icons/apple-touch-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/apple-touch-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-180x180.png">
+<link rel="icon" type="image/png" href="icons/favicon-192x192.png" sizes="192x192">
+<link rel="icon" type="image/png" href="icons/favicon-160x160.png" sizes="160x160">
+<link rel="icon" type="image/png" href="icons/favicon-96x96.png" sizes="96x96">
+<link rel="icon" type="image/png" href="icons/favicon-16x16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="icons/favicon-32x32.png" sizes="32x32">
+<meta name="msapplication-TileColor" content="#264aac">
+<meta name="msapplication-TileImage" content="icons/mstile-144x144.png">
+</head>
+<body>
+<div id="content">
+<h1 class="title">Linux で H.264/AAC エンコード</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">各種エンコーダの概要</a></li>
+<li><a href="#sec-2">x264</a>
+<ul>
+<li><a href="#sec-2-1">コマンド</a></li>
+<li><a href="#sec-2-2">オプション</a></li>
+<li><a href="#sec-2-3">フィルタ</a></li>
+</ul>
+</li>
+<li><a href="#sec-3">FFmpeg</a>
+<ul>
+<li><a href="#sec-3-1">コマンド</a></li>
+<li><a href="#sec-3-2">オプション</a></li>
+<li><a href="#sec-3-3">フィルタ</a></li>
+<li><a href="#sec-3-4">周波数解析 (v3.0)</a></li>
+</ul>
+</li>
+<li><a href="#sec-4">MPlayer</a>
+<ul>
+<li><a href="#sec-4-1">コマンド</a></li>
+<li><a href="#sec-4-2">オプション</a></li>
+<li><a href="#sec-4-3">フィルタ</a></li>
+</ul>
+</li>
+<li><a href="#sec-5">NeroAAC (v1.5.1)</a>
+<ul>
+<li><a href="#sec-5-1">コマンド</a></li>
+<li><a href="#sec-5-2">オプション</a></li>
+<li><a href="#sec-5-3">周波数解析</a></li>
+</ul>
+</li>
+<li><a href="#sec-6">FAAC (v1.28)</a>
+<ul>
+<li><a href="#sec-6-1">コマンド</a></li>
+<li><a href="#sec-6-2">オプション</a></li>
+<li><a href="#sec-6-3">周波数解析</a></li>
+</ul>
+</li>
+<li><a href="#sec-7">FDK AAC (v0.1.2)</a>
+<ul>
+<li><a href="#sec-7-1">コマンド</a></li>
+<li><a href="#sec-7-2">オプション</a></li>
+<li><a href="#sec-7-3">周波数解析</a></li>
+<li><a href="#sec-7-4">バージョン</a></li>
+</ul>
+</li>
+<li><a href="#sec-8">qaac (v2.58)</a>
+<ul>
+<li><a href="#sec-8-1">コマンド</a></li>
+<li><a href="#sec-8-2">オプション</a></li>
+<li><a href="#sec-8-3">周波数解析</a></li>
+<li><a href="#sec-8-4">バージョン</a></li>
+</ul>
+</li>
+<li><a href="#sec-9">H.265 について</a></li>
+<li><a href="#sec-10">参考リンク</a></li>
+<li><a href="#sec-11">ライセンス</a></li>
+</ul>
+</div>
+</div>
+<p>
+詳細はともかく、コピペで使いたいという方向け。
+動作確認は bash のみ。
+</p>
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">各種エンコーダの概要</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+使ってみたり調べたりしたモノ。
+編集したければノンリニア編集ソフトや、DAW(Digital Audio Workstation) とかを使った方がいいかも。
+</p>
+
+<ul class="org-ul">
+<li><a href="http://www.videolan.org/developers/x264.html">x264</a>
+<ul class="org-ul">
+<li>ソフトウェアエンコーダの定番
+</li>
+<li>映像をエンコードするのみ
+</li>
+<li>MP4 コンテナを扱うには GPAC/L-SMASH が必要
+</li>
+<li>内臓フィルタを扱うには FFmpeg/Libav が必要
+</li>
+<li>複数のオプションを追加した非公式なものが存在する (ここでは扱わない)
+</li>
+</ul>
+</li>
+
+<li><a href="http://ffmpeg.org/">FFmpeg</a>
+<ul class="org-ul">
+<li>FFmpeg だけあれば、他がいらないかもしれないという意味でお手軽
+</li>
+<li>x264 もしくは OpenH264/NVENC (v2.6) か QSV (v2.7) が必要
+</li>
+<li>組み込める LC 対応エンコーダは FDK-AAC &gt; 内蔵AAC (v3.0) &gt;&gt; FAAC など (その他は解析してない)
+</li>
+<li>字幕を扱える
+</li>
+<li>フィルタが豊富
+</li>
+<li>付属の ffserver は配信できる
+</li>
+<li>付属の ffplay は再生できる
+</li>
+</ul>
+</li>
+
+<li><a href="http://www.mplayerhq.hu/">MPlayer</a>
+<ul class="org-ul">
+<li>主に再生で用いる
+</li>
+<li>付属の mencoder はエンコードできる
+</li>
+<li>FFmpeg を内包している ( x264 が必要)
+</li>
+<li>インターレース解除などのフィルタが豊富
+</li>
+<li>ISO イメージも扱える
+</li>
+</ul>
+</li>
+
+<li><a href="http://www.nero.com/enu/technologies-aac-codec.html">Nero AAC</a>
+<ul class="org-ul">
+<li>Nero社よりバイナリで提供
+</li>
+<li>LC/HE/HEv2 に対応
+</li>
+<li>2-pass エンコードができる
+</li>
+</ul>
+</li>
+
+<li><a href="http://www.audiocoding.com">FAAC</a>
+<ul class="org-ul">
+<li>MAIN/LC/LTP に対応
+</li>
+<li>FFmpeg/Libav などに組み込める
+</li>
+</ul>
+</li>
+
+<li><a href="http://sourceforge.net/projects/opencore-amr/">FDK AAC</a>
+<ul class="org-ul">
+<li>AAC の開発元の一つである Fraunhofer IIS より提供 ( MP3 の開発元でもある)
+</li>
+<li>LC/HE/HEv2 などに対応
+</li>
+<li>FFmpeg/Libav などに組み込める
+</li>
+</ul>
+</li>
+
+<li><a href="https://sites.google.com/site/qaacpage/">qaac</a>
+<ul class="org-ul">
+<li>Apple 社より提供されている iTunes などが必要
+</li>
+<li>エミュレータ?が必要 (ややこしくなるので気にしてはいけない)
+</li>
+<li>LC/HE などに対応
+</li>
+</ul>
+</li>
+
+<li><a href="https://github.com/nu774/fdkaac">fdkaac</a>
+<ul class="org-ul">
+<li>FDK AAC のフロントエンド
+</li>
+</ul>
+</li>
+</ul>
+
+<p>
+他にもいろいろある。よく知らないけど。
+</p>
+<ul class="org-ul">
+<li><a href="http://libav.org/">Libav</a>
+<ul class="org-ul">
+<li>FFmpeg でいろいろあって分裂した
+</li>
+<li>コマンドは avconv
+</li>
+</ul>
+</li>
+
+<li><a href="http://fixounet.free.fr/avidemux">Avidemux</a>
+<ul class="org-ul">
+<li>GUI
+</li>
+<li>x264 が必要
+</li>
+<li>FAAC を組み込める
+</li>
+</ul>
+</li>
+
+<li><a href="http://handbrake.fr/">HandBrake</a>
+<ul class="org-ul">
+<li>GUI
+</li>
+<li>x264 が必要
+</li>
+<li>FDK AAC を組み込める (v0.10.0)
+</li>
+</ul>
+</li>
+
+<li><a href="http://sourceforge.net/projects/opencore-amr/">vo-aacenc</a>
+<ul class="org-ul">
+<li>VisualOn 社より提供
+</li>
+<li>LC 対応
+</li>
+<li>Libav などに組み込める (FFmpeg は v3.0 廃止)
+</li>
+</ul>
+</li>
+
+<li><a href="http://tipok.org.ua/node/17">AAC+</a>
+<ul class="org-ul">
+<li>3GPP より提供
+</li>
+<li>HE/HEv2 対応
+</li>
+<li>Libav などに組み込める (FFmpeg は v3.0 廃止)
+</li>
+</ul>
+</li>
+
+<li><a href="http://gpac.sourceforge.net/">GPAC</a>
+<ul class="org-ul">
+<li>MP4Box で MP4 コンテナに手を加えることができる
+</li>
+<li>x264 の MP4 muxer として組み込める
+</li>
+</ul>
+</li>
+
+<li><a href="http://up-cat.net/L%25252DSMASH.html">L-SMASH</a>
+<ul class="org-ul">
+<li>MP4 コンテナの規格に "できるだけ(実用的な範囲で?)" 忠実に実装しているらしい
+</li>
+<li>x264 に MP4 muxer として組み込める (r2376)
+</li>
+</ul>
+</li>
+
+<li><a href="https://github.com/avxsynth/avxsynth/wiki">AvxSynth</a>
+<ul class="org-ul">
+<li>AviSynth の Linux 版
+</li>
+<li>スクリプトフィルタは AviSynth のが流用できるかも?
+</li>
+</ul>
+</li>
+
+<li><a href="http://1010.co.uk/gneve.html">GNEVE</a>
+<ul class="org-ul">
+<li>Emacs で映像編集
+</li>
+<li>フロントエンドに徹して、キーボードで操作を完結できるならアリだと思う
+</li>
+</ul>
+</li>
+
+<li><a href="http://www.openh264.org/">OpenH264</a>
+<ul class="org-ul">
+<li>Cisco 社より提供
+</li>
+<li>Firefox に組み込める (v33)
+</li>
+<li>FFmpeg に組み込める (v2.6)
+</li>
+</ul>
+</li>
+
+<li><a href="http://www.vapoursynth.com/">VapourSynth</a>
+<ul class="org-ul">
+<li>AviSynth を置き換える予定のフレームサーバ
+</li>
+<li>音声はまだ扱えない
+</li>
+</ul>
+</li>
+
+<li><a href="https://developer.nvidia.com/nvidia-video-codec-sdk">NVENC</a>
+<ul class="org-ul">
+<li>NVIDIA 社より提供
+</li>
+<li>ハードウェアエンコーダ <del>(CUDA)</del>
+</li>
+<li>FFmpeg に組み込める (v2.6)
+</li>
+</ul>
+</li>
+
+<li><a href="http://gstreamer.freedesktop.org/">GStreamer</a>
+<ul class="org-ul">
+<li>マルチメディアフレームワーク
+</li>
+<li>gst-omx にて AMD 社より提供されているハードウェアエンコーダを組み込める (VCE)
+</li>
+<li>gst-plugins-ugly にて x264 を組み込める
+</li>
+<li>gst-plugins-bad にて FAAC/vo-aacenc を組み込める
+</li>
+</ul>
+</li>
+
+<li><a href="https://github.com/jp9000/obs-studio">OBS Multiplatform</a>
+<ul class="org-ul">
+<li>GUI
+</li>
+<li>主にライブ配信向け?
+</li>
+<li>x264 が必要
+</li>
+<li>FDK AAC を組み込める
+</li>
+<li>FFmpeg を組み込める
+</li>
+</ul>
+</li>
+
+<li><a href="https://software.intel.com/en-us/intel-media-server-studio">Intel Media Server Studio</a>
+<ul class="org-ul">
+<li>Intel 社より提供 (付属の SDK が必要)
+</li>
+<li>ハードウェアエンコーダ (QSV)
+</li>
+<li>mfx_dispatch が必要
+</li>
+<li>FFmpeg に組み込める (v2.7)
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">x264</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+<div id="outline-container-sec-2-1" class="outline-3">
+<h3 id="sec-2-1">コマンド</h3>
+<div class="outline-text-3" id="text-2-1">
+<ul class="org-ul">
+<li>再現性を優先<br >
+  --preset placebo に近い。
+当方が常用しているのは、--me umh --subme 9 --trellis 1 --aq-strength 0.6 に変えたもの。
+<div class="org-src-container">
+
+<pre class="src src-sh">x264 --muxer mp4 --demuxer lavf --video-filter resize:width=512,height=288,sar=0:0,csp=i420:8,method=area --crf 26 --me tesa --subme 11 --qcomp 0.8 --qpstep 8 --partitions all --bframes 3 --b-adapt 2 --trellis 2 --ref 6 --aq-strength 0 --no-psy --no-dct-decimate --chroma-qp-offset -2 --threads auto --output "$2" -- "$1"
+</pre>
+</div>
+</li>
+
+<li>視覚を考慮<br >
+  デフォルトに近い。SSIM=0.980 以上を狙いつつ、エンコード時間と再生負荷を抑える。<br >
+  -&gt; 512x288, 30000/1001-&gt;24000/1001fps
+<div class="org-src-container">
+
+<pre class="src src-sh">x264 --muxer mp4 --demuxer lavf --video-filter resize:width=512,height=288,sar=0:0,csp=i420:8,method=area/select_every:5,0,1,3,4 --crf 26 --me umh --subme 7 --qcomp 0.8 --qpstep 8 --partitions "p8x8,b8x8,i8x8,i4x4" --bframes 3 --ref 6 --psy-rd 0.25:0.0 --aq-strength 0.6 --threads auto --output "$2" -- "$1"
+</pre>
+</div>
+</li>
+</ul>
+
+<p>
+<a id="see_x264-params"></a>
+</p>
+</div>
+</div>
+<div id="outline-container-sec-2-2" class="outline-3">
+<h3 id="sec-2-2">オプション</h3>
+<div class="outline-text-3" id="text-2-2">
+<ul class="org-ul">
+<li>できるだけ元の映像を再現する方向で、等倍もしくは縮小するときに留意するもの<br >
+  <b>--crf / --bitrate / --qp はどれか一つだけ</b> 記述すること。
+それぞれが、品質固定(VBR) / 平均or固定ビットレート(ABR or CBR) / 固定量子化値(CQP) のモードを選択するものの、どれが有効になるかは実装次第なので。
+<table>
+
+
+<colgroup>
+<col  class="left">
+
+<col  class="left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">オプション</th>
+<th scope="col" class="left">効果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">--crf 26.0</td>
+<td class="left">品質固定 (VBR) モード。品質を量子化値 (QP: Quantization Parameter = 間引く量のこと、以降 QP と記述する) で指定すると考えて差し支えはない。26 はエコノミー品質。20 で元の映像とほとんど同じ。16 未満にしても無意味。なお、0 にするだけでは可逆にできない。小数指定可。実際には、指定の値でレート因数を固定 (crf: Constant Rate Factor) して、ビットレートを考慮せずに QP を決定する。</td>
+</tr>
+
+<tr>
+<td class="left">--me umh</td>
+<td class="left">動き探索 (Motion Estimation) に umh (Uneven-cross Multi-Hexagon-grid search) を指定。動きの複雑な映像のビットレートを低くするなら umh 以上を推奨。というより探索パターンが少なくて単純な hex と、愚直で遅い esa は避けたい。umh は複数の探索パターンを用いるけど、無駄な探索は抑える仕組みになってる。探索半径は --merange で指定。</td>
+</tr>
+
+<tr>
+<td class="left">--subme 7</td>
+<td class="left">より低いビットレートで品質を保持するために、RD (Rate-Distortion optimization: レート歪み最適化、以降 RD と記述する) は必須。よって 5 以下は論外なので、サブピクセルについては考慮しない。基本は 7/9/10/11 からの選択となる。--bframes 0 なら 6/8 もアリ。数字が大きいほど精度が良い。10/11 を指定するなら、--trellis 2 --aq-mode 1 以上を同時に指定しないと 9 に変更されてしまうので注意。</td>
+</tr>
+
+<tr>
+<td class="left">--partitions all</td>
+<td class="left">マクロブロックの分割パターン。品質に関しては RD に丸投げするので全て有効にする。p4x4 が増えるので再生負荷がちょっと上がるけど、ビットレートは低くなるハズ。</td>
+</tr>
+
+<tr>
+<td class="left">--bframes 3</td>
+<td class="left">3 以下を指定する。24fps の場合、劣化したフレームが 4 つ以上続くと品質の低下を視認できることがある。低品質なソースでは 0 にすることも考えること。</td>
+</tr>
+
+<tr>
+<td class="left">--aq-mode 1</td>
+<td class="left">QP の <span class="underline">オフセット</span> を決定する方法を選択する。マクロブロック間の品質の差は 0&lt;1&lt;2 の順に大きくなる。0 で無効にするのは非推奨。<a href="#see_aq-mode">適応 QP モードについての補足は下記</a>。</td>
+</tr>
+
+<tr>
+<td class="left">--aq-strength 0.6</td>
+<td class="left">--aq-mode の係数。0.0〜3.0 を指定できる。数字が大きいほどマクロブロック間の品質の差が大きくなる。0 を指定すると --aq-mode 0 とほぼ同じだけど、QP の変動が単純になるので --subme 10 以上の場合を除いて非推奨。指定の値は、--aq-mode 1 なら固定され、--aq-mode 2 だとフレーム毎に変動する。大きな値を指定して周辺とは品質の差が大きいマクロブロックが発生すると、ブロックノイズになるので注意。</td>
+</tr>
+
+<tr>
+<td class="left">--trellis 1</td>
+<td class="left">量子化後に残った成分を個別に丸めて最適化する。一律な量子化による歪みが軽減されて品質が向上するので、1 以上を推奨。同時に --no-dct-decimate を指定すると結果を維持できる。トレリス (trellis) は、複数の親ノードを持つツリー構造なアルゴリズムの名前?。トレリス線図とか検索するとわかるかも。</td>
+</tr>
+
+<tr>
+<td class="left">--no-dct-decimate</td>
+<td class="left">成分の少ないマクロブロックから品質補償なしで間引くのをやめる。ビットレートは高くなるけど --trellis 0 なら指定を推奨。--trellis 1 以上でも、余計な間引きをしなくなってわずかに品質が良くなる。ノイズの原因を減らすことになるのでグレインを残すときや、リンギングノイズを軽減したいときに指定する。ベタな赤のエッジがにじんでしまって気になるけど --crf 20 でも除けないときなどに多分有用。</td>
+</tr>
+
+<tr>
+<td class="left">--no-psy</td>
+<td class="left">--psy-rd を無効にする。視覚についてまったく考慮しないという意味ではない。指定するとビットレートが低下するのは、色 (色差、彩度) の QP=+2 とノイズ?低減などによる。再現性を優先するなら必須。</td>
+</tr>
+
+<tr>
+<td class="left">--chroma-qp-offset -2</td>
+<td class="left">色の QP オフセット。0 がデフォルトだけど、--psy-rd の値に応じて 0〜-4 が加算される。(左右の値それぞれについて 0&lt;f&lt;0.25 なら -1、 0.25&lt;=f で -2。--no-psy は 0)</td>
+</tr>
+</tbody>
+</table>
+</li>
+
+<li>基本的に使わないもの
+<table>
+
+
+<colgroup>
+<col  class="left">
+
+<col  class="left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">オプション</th>
+<th scope="col" class="left">効果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">--pass 2</td>
+<td class="left">2-pass エンコード。平均ビットレートを指定して、ファイルサイズを決めることができる。ただし、平均ビットレートが同じなら品質固定な --crf の方が高品質。</td>
+</tr>
+
+<tr>
+<td class="left">--bitrate &lt;integer&gt;</td>
+<td class="left">平均ビットレート (ABR) モード。2pass エンコードで --vbv-maxrate に同じ値を指定すると、固定ビットレート (CBR) になる。</td>
+</tr>
+
+<tr>
+<td class="left">--qp 0</td>
+<td class="left">固定量子化値 (CQP) モード。0 で可逆モード。0 を越える値は、特定の QP ごとに映像を比較するようなテスト向け?。</td>
+</tr>
+
+<tr>
+<td class="left">--fps 24000/1001</td>
+<td class="left">フレームレートの指定。フレーム数は増減しないので、再生速度が変わることになる。(select_every に上書きされるので注意)</td>
+</tr>
+
+<tr>
+<td class="left">--psy-rd 0.25:</td>
+<td class="left">複雑さを測定するときの感度係数。0.0〜10.0 を指定できる。平坦になったと感じられるなら、値を指定することで適度に複雑さを保てるかも。大きな値を指定すると複雑な箇所がキレイに見えやすくなるけど、平坦な箇所は鮮明さを失ってモスキートノイズが発生しやすくなる。<a href="#see_psy-rd">心理視覚についての補足は下記</a>。</td>
+</tr>
+
+<tr>
+<td class="left">--psy-rd :0.0</td>
+<td class="left">--trellis による丸めの感度係数。0.0〜10.0 を指定できる。平坦になったと感じられるなら、値を指定することで適度に粗くなるかも。大きな値を指定すると粗かった箇所がより粗さを保ってるように見えやすくなるけど、エッジの周辺は鮮明さを失ってモスキートノイズが発生しやすくなる。<a href="#see_psy-rd">心理視覚についての補足は下記</a>。</td>
+</tr>
+
+<tr>
+<td class="left">--no-fast-pskip</td>
+<td class="left">映像の一部が引きずられるようにして残る場合に使う。スキップ判定のミスを抑制できるので、常に指定するのもアリ。動き探索の回数は増えるけど、負荷は小さい。</td>
+</tr>
+
+<tr>
+<td class="left">--no-mbtree</td>
+<td class="left">成分が少なくなるマクロブロックタイプを優先的に選択するのをやめる。指定すると動いてるところや暗部などから間引く量が減る。小さな QP を指定すると同時に QP の増分を抑えても、なお暗部の劣化が気になってしまう場合などに指定するかも。主に巨大モニタを間近で見る方や、不幸なほどに目の肥えてしまった方向け。指定すると CQP に近づいてしまうので、--subme 10 以上を推奨 ( QP-RD が有効になるので、--aq-strength 0 も指定すると少し品質が向上する) 。ビットレートを抑えたいなら非推奨。</td>
+</tr>
+
+<tr>
+<td class="left">--no-cabac</td>
+<td class="left">再生負荷は軽くなるけど、ビットレートが高くなって映像のファイルサイズが 10% ほど増える。 CABAC に対応していない携帯端末などで再生する時に指定する。</td>
+</tr>
+
+<tr>
+<td class="left">--no-deblock</td>
+<td class="left">--deblock を無効にするのは非推奨。極端に小さな QP でない限りブロックノイズは発生するもので、ないように見えても存在するものだと考えておくべき。再生のときにデブロックフィルタ (ループフィルタとか書いてあるかも) が使えないなら指定する。</td>
+</tr>
+
+<tr>
+<td class="left">--deblock 0:0</td>
+<td class="left">インループなデブロックフィルタの強さ。左値がブロックの境界に、右値がその周囲に作用する。不要な箇所には作用しないし QP に応じて最適化されるので、0:0 から動かしても品質が向上する可能性は低い。潰れて欲しくない箇所が潰れたなら -1:-1、ブロックノイズが見えるのなら 1:1 にしてみるかも。必要になるのは --psy-rd を考慮する場合やカスタムマトリクスを使うときくらい?。</td>
+</tr>
+
+<tr>
+<td class="left">--nr &lt;integer&gt;</td>
+<td class="left">負荷の少ないノイズフィルタ。単純で融通が効かないので使ってない。--no-deblock が必要なときには役立つのかも。<a href="#see_nr">ノイズ除去についての補足は下記</a>。</td>
+</tr>
+
+<tr>
+<td class="left">--vbv-maxrate &lt;integer&gt;</td>
+<td class="left">ビットレート (kbit/s) の上限。0〜2000000 を指定できる。--vbv-bufsize の指定が必須。</td>
+</tr>
+
+<tr>
+<td class="left">--vbv-bufsize &lt;integer&gt;</td>
+<td class="left">バッファサイズ (kbit) 。0〜2000000 を指定できる。</td>
+</tr>
+
+<tr>
+<td class="left">--threads &lt;integer&gt;</td>
+<td class="left">スレッド数。auto がデフォルト。</td>
+</tr>
+
+<tr>
+<td class="left">--level &lt;string&gt;</td>
+<td class="left"><del>自動的に最適な値になるので使わない。</del> 再生機器の性能に応じて指定する。</td>
+</tr>
+
+<tr>
+<td class="left">--profile &lt;string&gt;</td>
+<td class="left"><del>自動的に最適な値になるので使わない。</del> 再生機器の性能に応じて指定する。</td>
+</tr>
+
+<tr>
+<td class="left">--preset &lt;string&gt;</td>
+<td class="left">オプションを個別に指定するのが面倒な方向け。</td>
+</tr>
+
+<tr>
+<td class="left">--tune &lt;string&gt;</td>
+<td class="left">オプションを個別に指定するのが面倒な方向け。</td>
+</tr>
+
+<tr>
+<td class="left">--fullhelp</td>
+<td class="left">全てのオプションを一覧する。習熟した方ならこれで十分に違いない。当方がそう思えたのは、ソースコードを読んだ後だけど。</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+
+<p>
+<a id="see_aq-mode"></a>
+</p>
+<ul class="org-ul">
+<li>適応 QP モード (--aq-mode: Adaptive QP offset MODE) についての補足<br >
+  何に応じてマクロブロック単位の QP の <span class="underline">オフセット</span> を決定するのかを選択する。
+マクロブロック間の品質の差は 0&lt;1&lt;3&lt;2 の順に大きくなる。
+<table>
+
+
+<colgroup>
+<col  class="right">
+
+<col  class="left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="right">--aq-mode</th>
+<th scope="col" class="left">効果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="right">0</td>
+<td class="left">無効にする。同時に --no-mbtree の指定が必須。無効にすると QP の変動が単純になるので非推奨。</td>
+</tr>
+
+<tr>
+<td class="right">1</td>
+<td class="left">マクロブロックの差分に応じたオフセットになる。</td>
+</tr>
+
+<tr>
+<td class="right">2</td>
+<td class="left">マクロブロックの差分とフレームの差分の量を考慮して、オフセットは動きの少ないフレームでは小さく、動きの多いフレームでは大きくなる。</td>
+</tr>
+
+<tr>
+<td class="right">3</td>
+<td class="left">基本的には 2 と同じ。違いは、暗部などのビットが少ないところでオフセットが大きくなりにくいこと。(r2524)</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+
+<p>
+<a id="see_psy-rd"></a>
+</p>
+<ul class="org-ul">
+<li>心理視覚最適化 (--psy-rd: PSYcho-visual Rate-Distortion optimization) についての補足<br >
+  サイコビジュアルって用語を、わかりやすく(乱暴に)言い換えるとアンチエイリアス。
+フォントに使われてるアレ。
+再現性は低下しても、目で見る分には良くなることがある。
+
+<p>
+オプションとしては、複雑な箇所をどのくらい優先するかを指定するもの。
+間引いたらソースよりも平坦な映像になるのは仕様なんだから、
+平坦な箇所よりも複雑な箇所を少し優先することで、良くなったように見えるのかも。
+</p>
+
+<p>
+--crf 26 でモスキートノイズの発生を避けるなら、どちらの値も 1.0 以下が目安。
+値が大きすぎると、ビットレートを高くしてノイズを加える側面がある。
+QP を小さくすれば許容できる値が大きくなるかもしれないけど、効果はわかりにくくなると思う。
+再現性を優先するなら --no-psy を推奨。
+ビットレートの制限がキツいときも、--no-psy は有用。
+個々人の嗜好、ソース、モニタなどによるところもあるので、ノイズが発生しない範囲内で好みの値を選択する。
+同時に --deblock などの値を調節したほうがいい場合もあるので注意。( --tune 参照)
+</p>
+
+<p>
+少し粗めのソースを、フィルタなしでエンコードするようなときには手軽かも。
+にじみに見えてしまうので、当方はできるだけ使わないことにしてる。
+( 2001 年に製造停止されたアナログ入力な液晶モニタなので参考にならないかも)
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-sh">--psy-rd RD:Trellis
+</pre>
+</div>
+
+<p>
+RD の値は、複雑さを測定するときの感度係数。
+値が大きいほどマクロブロックが複雑だと判定されやすくなって、
+ブロックサイズが大きくなったりスキップされにくくなったりするのでビットレートは高くなる。
+高周波成分が残りやすくなるという側面もあるので、潰れてしまったグレインなどにはいいのかも。
+</p>
+
+<p>
+Trellis の値は、量子化後に丸める際の感度係数。
+値が大きいほど、マクロブロック内の偏りを生む周波数成分が削られ (-1 され) やすくなる。
+ついでに潰れた薄い線とかが復元されるように見えることもあるけど、
+それは歪みが大きいと判定されてマクロブロックタイプに参照なしを選択されたり、
+小さな QP を適用するハメになったりすることでビットレートが高くなるからだと思う。
+<span class="underline">(検証不足につき注意)</span>
+</p>
+</li>
+</ul>
+
+<p>
+<a id="see_nr"></a>
+</p>
+<ul class="org-ul">
+<li>ノイズ除去についての補足<br >
+  ノイズが発生したときは QP (--zones/qpfile) を小さくする、10bit に走る、フィルタを使うなどの方法がある。
+当方は許容できないノイズだけを FFmpeg などのフィルタで除去して、x264 には再現性のみを求める方針。
+再生に MPlayer を使っているなら、フィルタ (-vf) を指定したり、映像出力ドライバ (-vo) を変えるという手もある。
+( gl/vdpau などの映像出力ドライバは RGB に変換するので、明暗部が潰れてノイズがわからなくなる)
+
+<p>
+ブロックノイズは発生させたら負け。
+よってキツいブロックノイズのあるソースはあきらめる。
+バンディングは QP を小さくしてもダメなら 8bit で表現できないからだと考えて均す。
+ビットレートの制限がキツいとか、ソースが汚いのでなければ、妥協するのはこの 2 つくらい?。
+</p>
+
+<p>
+ソースに比べて静止部分が汚いとか潰れたなどと感じるなら、割り当てられた QP が大きいということ。
+よって小さな QP (--zones/qpfile) を指定するのみ。
+</p>
+
+<p>
+ソースに比べて動く部分が汚いとか潰れたなどと感じるなら、割り当てられた QP の増分が大きいということ。
+動き探索の精度を高く、QP (--zones/qpfile) 小さくするのが基本。
+ビットレートをより低くする方針でキレイにするのは難しいので、必要な QP が割り当てられるまで複数のオプションを変更したりはしてない。
+(FFmpeg などのフィルタでノイズを除去したり、映像を平坦にするなどの手はある)
+</p>
+</li>
+
+<li>参照元<br >
+  2012.09.16 に git pull した <a href="http://git.videolan.org/?p=x264.git;a=commit;h=8980dd8afbfeeb6bcaa17b97aad0b3c24207665e">ソースコード(r2216)</a> を参考に記述してある。
+ついでに <a href="./gmon_callgraph.png">コールグラフ</a> も出力したけど、500 個以上のノードを省略してるので注意。
+
+<p>
+古くなったけど、まだ通用するハズ。(r2538)
+</p>
+</li>
+</ul>
+
+<p>
+<a id="see_x264_filters"></a>
+</p>
+</div>
+</div>
+<div id="outline-container-sec-2-3" class="outline-3">
+<h3 id="sec-2-3">フィルタ</h3>
+<div class="outline-text-3" id="text-2-3">
+<ul class="org-ul">
+<li>FFmpeg/Libav を必要とするものを含む。<br >
+<table>
+
+
+<colgroup>
+<col  class="left">
+
+<col  class="left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">--video-filter</th>
+<th scope="col" class="left">効果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">resize:width=512,height=288</td>
+<td class="left">フレームサイズの指定。height=288 は 16 と 9 の公倍数よりフレームの高さに指定した。マクロブロック 16x16 と、アスペクト比 16:9 によるもので、モニタサイズや規格に従って決めても構わない。 ただし、奇数はエラーになる。2K 以下を列挙すると、144, 288, 432, 576, 720, 864, 1008, 1152, 1296, 1440, 1584, 1728, 1872, 2016, 2160。</td>
+</tr>
+
+<tr>
+<td class="left">resize:sar=0:0</td>
+<td class="left">Sample Aspect Ratio の指定。再生時にフレームサイズを強制的に伸縮させないなら、0:0 で良い。</td>
+</tr>
+
+<tr>
+<td class="left">resize:csp=i420:8</td>
+<td class="left">色空間(Color SPace)の指定。色を完全に再現する必要はないので、BD/DVD と同じ yuv420p, 8bit(256階調) に固定。2x2pixel を { y:輝度x4 + u:色差Cbx1 + v:色差Crx1 } x 8bit で量子化する。情報量は yuv444p の半分。指定がなければソースと同じになる。</td>
+</tr>
+
+<tr>
+<td class="left">resize:method=area</td>
+<td class="left">画素間の補間方式に area を指定。area は <b>縮小向け</b> なので注意。少しシャープな映像になる。もしジャギーになるようなら lanczos を使う。lanczos でもダメならフィルタを併用する。他にもあるが使っていない。</td>
+</tr>
+
+<tr>
+<td class="left">select_every:5,0,1,3,4</td>
+<td class="left">フレームレートの変更。左の欄は 24-&gt;30fps (30000/1001-&gt;24000/1001fps) の例。実際はフレームを取捨する。{0}〜{4} の連続する 5 フレームのうち、{0},{1},{3},{4} の 4 フレームを残し、{2} の 1 フレームを破棄する。結果としてフレームレートが変わる。指定可能なステップは 100 まで。--fps オプションを上書きしてしまうため、併用できないことに注意。</td>
+</tr>
+
+<tr>
+<td class="left">crop:0,60,0,60</td>
+<td class="left">四辺を切り落とす。left, top, right, bottom の順。左の値は 640x480(4:3) の映像を 640x360(16:9) にするためのもの。</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3">FFmpeg</h2>
+<div class="outline-text-2" id="text-3">
+</div>
+<div id="outline-container-sec-3-1" class="outline-3">
+<h3 id="sec-3-1">コマンド</h3>
+<div class="outline-text-3" id="text-3-1">
+<ul class="org-ul">
+<li>映像のみエンコード<br >
+  音声はコピー。字幕は削除。後で結合する必要がない。
+<div class="org-src-container">
+
+<pre class="src src-sh">ffmpeg -i "$1" -vcodec libx264 -acodec copy -sn -map 0:0 -map 0:1 -vsync cfr -aspect 16:9 -s 512x288 -r 24000/1001 -pix_fmt yuv420p -sws_flags 'area+bitexact+print_info' -x264-params 'crf=26:me=umh:subme=7:qcomp=0.8:qpstep=8:partitions=p8x8,b8x8,i8x8,i4x4:bframes=3:ref=6:psy-rd=0.25,0.0:aq-strength=0.6' "$2"
+</pre>
+</div>
+</li>
+
+<li>パイプ出力<br >
+  FFmpeg のフィルタを通して、別に用意した最新の x264 を使うなどが可能。<br >
+  ブロックノイズのチラつきなどを減らすため hqdn3d フィルタを調節して適用する。グレインが潰れるかもしれない。
+<div class="org-src-container">
+
+<pre class="src src-sh">ffmpeg -i "$1" -f yuv4mpegpipe -filter hqdn3d=4:3:6 -s 512x288 -r 24000/1001 -pix_fmt yuv420p -sws_flags -bicubic+bitexact+area+print_info -v 0 - | x264 --muxer mp4 --demuxer y4m --crf 26 --qcomp 0.8 --qpstep 8 --partitions "p8x8,b8x8,i8x8,i4x4" --me umh --subme 7 --bframes 3 --ref 6 --psy-rd 0.3:0.0 --aq-strength 0.6 --threads auto --output "$2" -
+</pre>
+</div>
+</li>
+
+<li>音ズレ補正<br >
+  映像と音声を結合(追加)しつつ、音声を 0.4s 遅らせる。一定間隔の音ズレを補正。
+<div class="org-src-container">
+
+<pre class="src src-sh">ffmpeg -i "video.h264" -ss -0.4 -i "audio.aac" -vcodec copy -acodec copy "av_joined.mp4"
+</pre>
+</div>
+</li>
+
+<li>ディスプレイをライブ配信 <b>(未検証)</b><br >
+  利用する配信サーバ側の制限に応じて、オプションの追加や変更が必要になる。
+配信中にディスプレイとカメラの映像を切り替える安易な方法は、
+<a href="#see_mp_webcam">MPlayer でカメラの映像を再生</a> してウィンドウマネージャを操作すること。
+<div class="org-src-container">
+
+<pre class="src src-sh">ffmpeg -f x11grab -i :0.0 -s 512x288 -aspect 16:9 -f alsa -i hw:0 -vcodec libx264 -acodec libfdk_aac -vsync cfr -y -f flv 'rtmp://... flashver=FME/3.0\20(compatible;\20FMSc/1.0)'
+</pre>
+</div>
+</li>
+
+<li>音声のみエンコード<br >
+  内蔵 AAC で CBR エンコード。 (VBR は非推奨)
+<div class="org-src-container">
+
+<pre class="src src-sh">ffmpeg -i "$1" -acodec aac -b:a 69k "$2"
+</pre>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-3-2" class="outline-3">
+<h3 id="sec-3-2">オプション</h3>
+<div class="outline-text-3" id="text-3-2">
+<ul class="org-ul">
+<li>汎用なものの一部 (-x264-params を除く)<br >
+<table>
+
+
+<colgroup>
+<col  class="left">
+
+<col  class="left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">オプション</th>
+<th scope="col" class="left">効果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">-i &lt;file_name&gt;</td>
+<td class="left">ソースとして入力するファイル名。複数指定可。</td>
+</tr>
+
+<tr>
+<td class="left">-i :0.0+10,20</td>
+<td class="left">ディスプレイをキャプチャするときのもの。ホスト名、ディスプレイ、スクリーン (xdpyinfo コマンドで確認できる) と、キャプチャ領域の左上 XY 座標を指定。</td>
+</tr>
+
+<tr>
+<td class="left">-i hw:0</td>
+<td class="left">音声をキャプチャするときのもの。カード、デバイス、サブデバイスの順に指定。</td>
+</tr>
+
+<tr>
+<td class="left">-ss -0.4</td>
+<td class="left">シーク、頭出し、開始時刻(s)。負の値を指定すると開始時刻が遅れる。-ss 以降の最初に -i で渡された入力が対象。複数指定可。</td>
+</tr>
+
+<tr>
+<td class="left">-to 60</td>
+<td class="left">終了時刻(s)。指定の時刻、または終端までになる。再生できる時間は -ss の値によって増減する。</td>
+</tr>
+
+<tr>
+<td class="left">-t 60</td>
+<td class="left">継続時間(s)。指定の時間分の再生ができるようになるか、終端までになる。</td>
+</tr>
+
+<tr>
+<td class="left">-vcodec copy</td>
+<td class="left">映像をコピー。libx264 もしくは libopenh264 (v2.6)、 nvenc (v2.6 のみ)、 nvenc_h264/h264_qsv (v2.7) の指定で H.264 エンコード。複数指定可。libx264 なら -x264-params に詳細を指定する。( -vn で映像なし)</td>
+</tr>
+
+<tr>
+<td class="left">-acodec copy</td>
+<td class="left">音声をコピー。<a href="#see_libfdk_aac">libfdk_aac</a> / <a href="#see_libfaac">libfaac</a> / aac などの指定で AAC エンコード。複数指定可。( -an で音声なし)</td>
+</tr>
+
+<tr>
+<td class="left">-scodec copy</td>
+<td class="left">字幕をコピー。コーデックの選択もできる。複数指定可。( -sn で字幕なし)</td>
+</tr>
+
+<tr>
+<td class="left">-map 0:0</td>
+<td class="left">&lt;input_file_id&gt;:&lt;stream_specifier&gt; の順。左の値は -i で最初に記述した入力ファイルの 0 番目のストリームを選択する。複数指定可。記述の順にコンテナに格納される。</td>
+</tr>
+
+<tr>
+<td class="left">-f yuv4mpegpipe</td>
+<td class="left">非圧縮な YUV4MPEG2(Y4M) 形式。</td>
+</tr>
+
+<tr>
+<td class="left">-f x11grab</td>
+<td class="left">ディスプレイの映像をキャプチャできる。-r 30000/1001 -s 640x480 -aspect 4:3 がデフォルト。</td>
+</tr>
+
+<tr>
+<td class="left">-f video4linux2</td>
+<td class="left">カメラの映像をキャプチャできる。</td>
+</tr>
+
+<tr>
+<td class="left">-f alsa</td>
+<td class="left">音声をキャプチャできる。最近は pulse かも。</td>
+</tr>
+
+<tr>
+<td class="left">-b:v 200k</td>
+<td class="left">映像のビットレート。</td>
+</tr>
+
+<tr>
+<td class="left">-b:a 69k</td>
+<td class="left">音声のビットレート。 -acodec aac では CBR 。モノラル 69k、ステレオ 128k 以上推奨。</td>
+</tr>
+
+<tr>
+<td class="left">-q:a 1.41</td>
+<td class="left">音声の品質。 -acodec aac では VBR 。 1.41〜2.7 を指定。1.41 未満だと人の声がおかしくなるほど極端に再現性が低下した。 <b>CBR の使用を推奨。</b></td>
+</tr>
+
+<tr>
+<td class="left">-ac 2</td>
+<td class="left">音声のチャネル。</td>
+</tr>
+
+<tr>
+<td class="left">-r 24000/1001</td>
+<td class="left">フレームレート。</td>
+</tr>
+
+<tr>
+<td class="left">-s 512x288</td>
+<td class="left">フレームサイズ。</td>
+</tr>
+
+<tr>
+<td class="left">-aspect 16:9</td>
+<td class="left">アスペクト比。</td>
+</tr>
+
+<tr>
+<td class="left">-pix_fmt yuv420p</td>
+<td class="left">ピクセルフォーマット。yuv420p は BD(2K)/DVD と同じ。10bit にするなら yuv420p10le など。-pix_fmts で一覧できる。</td>
+</tr>
+
+<tr>
+<td class="left">-vsync cfr</td>
+<td class="left">映像の同期方法。固定フレームレートなら cfr を指定して、必要に応じてフレームの複製や破棄をする。可変フレームレートなら vfr を指定して、同じタイムスタンプのフレームを破棄する。変えたくなければ passthrough を指定する。auto で出力するコンテナなどに応じて cfr/vfr/passthrough を自動選択するのがデフォルト。タイムスタンプがおかしいなら drop を指定して、元のタイムスタンプを破棄して指定のフレームレートで作り直す。</td>
+</tr>
+
+<tr>
+<td class="left">-x264-params 'crf=26:me=umh:...'</td>
+<td class="left"><a href="#see_x264-params">x264 のオプションを参照。</a> 区切り文字がコロン ":" なので、psy-rd にはカンマ "," を使うことに注意。( psy-rd=0.25,0.0 ) 同等のオプション -x264opts はパースに API (libavutil) を利用しない。</td>
+</tr>
+
+<tr>
+<td class="left">-movflags faststart</td>
+<td class="left">MP4 コンテナなどで配信するなら指定を推奨。再生開始に必要な情報を映像や音声よりも前に配置する。</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<ul class="org-ul">
+<li>その他のコーデック、フィルタ、デバイスについて<br >
+  まずはヘルプや一覧をコマンドを参照して、
+<div class="org-src-container">
+
+<pre class="src src-sh">ffmpeg -h full
+</pre>
+</div>
+<div class="org-src-container">
+
+<pre class="src src-sh">ffmpeg -codecs
+</pre>
+</div>
+<div class="org-src-container">
+
+<pre class="src src-sh">ffmpeg -filters
+</pre>
+</div>
+<p>
+man コマンドで検索するだけで大抵のことはわかるハズ。
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh">man ffmpeg-all
+</pre>
+</div>
+<div class="org-src-container">
+
+<pre class="src src-sh">man ffmpeg-codecs
+</pre>
+</div>
+<div class="org-src-container">
+
+<pre class="src src-sh">man ffmpeg-filters
+</pre>
+</div>
+<div class="org-src-container">
+
+<pre class="src src-sh">man ffmpeg-devices
+</pre>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-3-3" class="outline-3">
+<h3 id="sec-3-3">フィルタ</h3>
+<div class="outline-text-3" id="text-3-3">
+<ul class="org-ul">
+<li>映像向け<br >
+  モニタの製造元サイトなどで調べて、手動でモニタ調節してみることを推奨。
+ビデオカードのエフェクトの類も無効化しておく。
+その方が好みに合わせたままの状態よりも効果を確認しやすいハズ。
+(一般的なモニタに精度を求めるのは無理なので注意)
+<table>
+
+
+<colgroup>
+<col  class="left">
+
+<col  class="left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">-filter &lt;f1&gt;,&lt;f2&gt;,...,&lt;fn&gt;</th>
+<th scope="col" class="left">効果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">hqdn3d=2:1.5:3</td>
+<td class="left">3軸デノイズ。ちらつき(フリッカ)を抑える必要があれば指定する。グレインは潰れるかも。ls:cs:lt:ct (l:輝度、c:色、s:フレーム平面、t:時間) の順。</td>
+</tr>
+
+<tr>
+<td class="left">unsharp=3:3:-0.2:3:3:-0.2</td>
+<td class="left">アンシャープマスクでぼかし、またはシャープ。lx:ly:la:cx:cy:ca (l:輝度、c:色、xy:範囲、a&lt;0:ぼかし、a&gt;0:シャープ) の順。左の値は lanczos で縮小しても発生したエッジのジャギーをぼかしたときのもの。</td>
+</tr>
+
+<tr>
+<td class="left">gradfun=1.2:16</td>
+<td class="left">バンディング(banding)の除去。グラデーションが階段状になるときに指定する。これでダメなら 8bit の限界と考えて mp=eq2 で均してしまうか、再生のときに gradfun を指定する。再生向けのフィルタなので、もっといい方法があればそちらを推奨。</td>
+</tr>
+
+<tr>
+<td class="left">crop=640:360:0:60</td>
+<td class="left">四辺を切り落とす。コロン ":" で区切って width, height, x_axis, y_axis, keep_aspect の順に指定する。左の値は 640x480(4:3) の映像を 640:360(16:9) にするためのもの。</td>
+</tr>
+
+<tr>
+<td class="left">pad</td>
+<td class="left">四辺に帯を追加。色は指定できる。</td>
+</tr>
+
+<tr>
+<td class="left">deshake</td>
+<td class="left">手ぶれ補正。</td>
+</tr>
+
+<tr>
+<td class="left">yadif</td>
+<td class="left">インターレース解除。<a href="#see_mp_filters">MPlayer オプション参照。</a></td>
+</tr>
+
+<tr>
+<td class="left">w3fdif</td>
+<td class="left">インターレース解除。BBC R&amp;D より提供。(v2.1)</td>
+</tr>
+
+<tr>
+<td class="left">mp=pullup,mp=harddup</td>
+<td class="left">(v2.6 廃止) MPlayer のフィルタを使って逆テレシネ変換。 <a href="#see_mp_filters">MPlayer オプション参照。</a></td>
+</tr>
+
+<tr>
+<td class="left">mp=eq2=...</td>
+<td class="left">(v2.6 廃止) MPlayer のフィルタを使って色補正。色が変わるので指定しないのが基本。明らかに色がおかしいなら役立つ。gradfun で暗部のバンディングが除去できないときに、コロン ":" で区切って 0.970619, 0.979735, 0.020264, 1.0293802 の順に指定したことがある。<a href="#see_mp_filters">MPlayer オプション参照。</a></td>
+</tr>
+
+<tr>
+<td class="left">pullup</td>
+<td class="left">逆テレシネ変換。(v2.1)</td>
+</tr>
+
+<tr>
+<td class="left">eq</td>
+<td class="left">色補正。(v2.6)</td>
+</tr>
+
+<tr>
+<td class="left">deband</td>
+<td class="left">バンディング(banding)の除去。(v2.8)</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<ul class="org-ul">
+<li>音声向け<br >
+  v2.1 から <a href="http://www.ladspa.org/">LADSPA</a> が使えるようになった。だんだん増えてる。
+</li>
+</ul>
+
+<p>
+<a id="see_ffmpeg_aac"></a>
+</p>
+</div>
+</div>
+<div id="outline-container-sec-3-4" class="outline-3">
+<h3 id="sec-3-4">周波数解析 (v3.0)</h3>
+<div class="outline-text-3" id="text-3-4">
+<p>
+AAC-LC のみ。
+他の周波数解析と同じソース (WAVE, 48000Hz/1ch, 16bit, 768kbps) を使用し、 ffmpeg -acodec aac -b:a 128k でエンコード。
+<a href="https://trac.ffmpeg.org/wiki/Encode/AAC">This VBR is experimental and likely to get even worse results than the CBR.</a> なので、 VBR は非推奨。
+</p>
+
+<p>
+<a id="dft_full_ffmpeg"></a>
+</p>
+<ul class="org-ul">
+<li>全域<br >
+  低音を除いて良好。
+中高音の再現性はビットレート次第だけど、低音の再現性は 192k &gt; 69k &gt; 96k &gt; 128k になる。
+(see <a href="#dft_full_nero">NeroAAC</a> / <a href="#dft_full_faac">FAAC</a> / <a href="#dft_full_fdk">FDK AAC</a> / <a href="#dft_full_qaac">qaac</a>)
+<div class="center">
+
+<div class="figure">
+<p><img src="dft_full_ffmpeg.png" alt="dft_full_ffmpeg.png">
+</p>
+</div>
+</div>
+</li>
+</ul>
+
+<p>
+<a id="dft_cutoff_ffmpeg"></a>
+</p>
+<ul class="org-ul">
+<li>カットオフ周波数<br >
+  キレイにカットしていない (軽いレゾナンスかも?)。
+(see <a href="#dft_cutoff_nero">NeroAAC</a> / <a href="#dft_cutoff_faac">FAAC</a> / <a href="#dft_cutoff_fdk">FDK AAC</a> / <a href="#dft_cutoff_qaac">qaac</a>)
+<div class="center">
+
+<div class="figure">
+<p><img src="dft_cutoff_ffmpeg.png" alt="dft_cutoff_ffmpeg.png">
+</p>
+</div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4">MPlayer</h2>
+<div class="outline-text-2" id="text-4">
+</div>
+<div id="outline-container-sec-4-1" class="outline-3">
+<h3 id="sec-4-1">コマンド</h3>
+<div class="outline-text-3" id="text-4-1">
+<ul class="org-ul">
+<li>映像のみエンコード<br >
+  ソースが ISO イメージとかでなければ、x264/FFmpeg を直接使った方が楽。<br >
+  -&gt; 512x288, 30000/1001-&gt;24000/1001fps
+<div class="org-src-container">
+
+<pre class="src src-sh">mencoder "$1" -o "$2" -fps 30000/1001 -ofps 24000/1001 -oac copy -fafmttag 0x504D -of lavf -sws 5 -vf scale=512:288 -ovc x264 -x264encopts crf=26:bframes=3:frameref=6:partitions=all:subq=7:me=umh:psy-rd=0.3,0.0:aq_strength=0.6
+</pre>
+</div>
+</li>
+
+<li>mencoder から x264 へパイプ<br >
+  pp フィルタを使ったインターレースの縞模様があるプログレッシブな映像の補正。<br >
+  mencoder には、 <b>-really-quiet の指定が必須。</b> -quiet に変えてもダメ。
+x264 には、 <b>--input-res と --fps の指定が必須。</b>
+<div class="org-src-container">
+
+<pre class="src src-sh">mencoder "$1" -o - -really-quiet -of rawvideo -fps 30000/1001 -ofps 24000/1001 -nosound -sws 9 -vf pp=lb:c,softskip,scale=512:288,harddup,format=i420 -ovc raw - 2&gt;/dev/null | x264 --muxer mp4 --demuxer raw --crf 26 --qcomp 0.8 --qpstep 8 --partitions "p8x8,b8x8,i8x8,i4x4" --me umh --subme 7 --bframes 3 --ref 6 --psy-rd 0.3:0.0 --aq-strength 0.6 --threads auto --input-res 512x288 --fps 24000/1001 --output "$2" -
+</pre>
+</div>
+</li>
+
+<li>mplayer から x264 へリダイレクト<br >
+  インターレース解除のため yadif フィルタを適用。フレームレートを変更したければ mencoder など、他で行うことを推奨。
+<div class="org-src-container">
+
+<pre class="src src-sh">mplayer -dvd-device "$1" dvd://1 -quiet -nosound -sws 5 -vf yadif,scale=512:288,harddup -aspect 16:9 -vo yuv4mpeg:file=&gt;(x264 --muxer mp4 --demuxer y4m --crf 26 --qcomp 0.8 --qpstep 8 --partitions "p8x8,b8x8,i8x8,i4x4" --me umh --subme 7 --bframes 3 --ref 6 --psy-rd 0.3:0.0 --aq-strength 0.6 --threads auto --output "$2" - )
+</pre>
+</div>
+</li>
+
+<li>mplayer で再生<br >
+  デブロックフィルタを切るなら -lavdopts skiploopfilter=all を付ける。
+<div class="org-src-container">
+
+<pre class="src src-sh">mplayer -dr -noslices -double -vo xv "$1"
+</pre>
+</div>
+</li>
+</ul>
+
+<p>
+<a id="see_mp_webcam"></a>
+</p>
+<ul class="org-ul">
+<li>mplayer でカメラ再生 <b>(未検証)</b> <br >
+  オプションはカメラの性能に合わせて指定する。キャプチャしているディスプレイに表示するなら -vo x11 を追加。( dvb:// なんてのもある)
+<div class="org-src-container">
+
+<pre class="src src-sh">mplayer tv:// -tv driver=v4l2:width=640:height=480:device=/dev/video0 -fps 30
+</pre>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-4-2" class="outline-3">
+<h3 id="sec-4-2">オプション</h3>
+<div class="outline-text-3" id="text-4-2">
+<ul class="org-ul">
+<li>mplayer/mencoder 共用の一部<br >
+<table>
+
+
+<colgroup>
+<col  class="left">
+
+<col  class="left">
+
+<col  class="left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">オプション</th>
+<th scope="col" class="left">用途</th>
+<th scope="col" class="left">備考</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">-dvd-device &lt;file&gt;</td>
+<td class="left">デバイスファイルか ISO イメージを指定。</td>
+<td class="left">他にも -*-device あり。</td>
+</tr>
+
+<tr>
+<td class="left">-novideo</td>
+<td class="left">映像なし。</td>
+<td class="left"><i>N/A</i></td>
+</tr>
+
+<tr>
+<td class="left">-nosound</td>
+<td class="left">音声なし。</td>
+<td class="left"><i>N/A</i></td>
+</tr>
+
+<tr>
+<td class="left">-nosub</td>
+<td class="left">字幕なし。</td>
+<td class="left"><i>N/A</i></td>
+</tr>
+
+<tr>
+<td class="left">-sws 5</td>
+<td class="left">画素間の補間方式に area を指定。9 で lanczos。</td>
+<td class="left">area は縮小向け。</td>
+</tr>
+
+<tr>
+<td class="left">-aspect 16:9</td>
+<td class="left">アスペクト比の指定。</td>
+<td class="left">狂わないように使っておく。</td>
+</tr>
+
+<tr>
+<td class="left">-fps 30000/1001</td>
+<td class="left">入力のフレームレートを 30000/1001 で上書き。</td>
+<td class="left">フレーム数は増減しないので注意。</td>
+</tr>
+
+<tr>
+<td class="left">-o &lt;file&gt;</td>
+<td class="left">出力ファイルの指定。</td>
+<td class="left"><i>N/A</i></td>
+</tr>
+</tbody>
+</table>
+</li>
+
+<li>mencoder 専用の一部<br >
+  -x264encopts は x264 と大差ないので省略。
+<table>
+
+
+<colgroup>
+<col  class="left">
+
+<col  class="left">
+
+<col  class="left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">オプション</th>
+<th scope="col" class="left">用途</th>
+<th scope="col" class="left">備考</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">-ofps 24000/1001</td>
+<td class="left">出力するフレームレートを指定。</td>
+<td class="left">フレーム数が増減する。</td>
+</tr>
+
+<tr>
+<td class="left">-of rawvideo</td>
+<td class="left">コンテナの選択。</td>
+<td class="left">-of help で一覧表示。 <b>BETA CODE</b> らしい。</td>
+</tr>
+
+<tr>
+<td class="left">-ovc x264</td>
+<td class="left">Output Video Codec の指定。</td>
+<td class="left">-ovc help で一覧表示。</td>
+</tr>
+
+<tr>
+<td class="left">-oac copy</td>
+<td class="left">Output Audio Codec の指定。</td>
+<td class="left">-oac help で一覧表示。</td>
+</tr>
+
+<tr>
+<td class="left">-fafmttag 0x????</td>
+<td class="left">オーディオフォーマットタグの指定。</td>
+<td class="left">-oac copy に失敗したら使う。下記参照。</td>
+</tr>
+</tbody>
+</table>
+</li>
+
+<li>-fafmttag 0x????<br >
+  -oac copy だけで音声をコピーできるハズだけど、
+<code>Audio format 0x4134504d is incompatible with '-oac copy', please try '-oac pcm' instead or use '-fafmttag' to override it.</code>
+と文句を言われることがある。
+そのときは <a href="http://www.mplayerhq.hu/DOCS/HTML/en/menc-feat-streamcopy.html">こちら</a> を参考に -fafmttag を追記すれば良い。<br >
+  渡す値は mplayer で取得できる。(´д｀)ェェェ
+<div class="org-src-container">
+
+<pre class="src src-sh">mplayer -novideo -v -endpos 0 "$1" | grep Tag
+</pre>
+</div>
+</li>
+</ul>
+
+<p>
+<a id="see_mp_filters"></a>
+</p>
+</div>
+</div>
+<div id="outline-container-sec-4-3" class="outline-3">
+<h3 id="sec-4-3">フィルタ</h3>
+<div class="outline-text-3" id="text-4-3">
+<ul class="org-ul">
+<li>mplayer/mencoder 共用の一部。左から順に適用される。-vf &lt;filter1&gt;,&lt;filter2&gt;,...<br >
+<table>
+
+
+<colgroup>
+<col  class="left">
+
+<col  class="left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">フィルタ</th>
+<th scope="col" class="left">用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">pullup</td>
+<td class="left">逆テレシネ変換。固定フレームレートでテレシネ変換されただけのソースに最適で、キレイに戻る。同時にフレームレートも下げること。でないと無用な複製フレームが挿入される。</td>
+</tr>
+
+<tr>
+<td class="left">filmdint=io=5:4</td>
+<td class="left">逆テレシネ変換。できなければ単純なインターレース解除。x86 環境向け。MMX2/3DNow! を使ってくれる。文字などが苦手。io と -fps を指定すれば mplayer でもフレームレートの変更が可能。</td>
+</tr>
+
+<tr>
+<td class="left">yadif</td>
+<td class="left">インターレース解除。pullup でダメならコレ。可変フレームレートでも大丈夫なハズ。同時にフレームレートを変更してカクカクになったら、x264 の <a href="#see_x264_filters">select_every</a> が役に立つかも。</td>
+</tr>
+
+<tr>
+<td class="left">pp=lb</td>
+<td class="left">インターレース解除。インターレースの縞模様が残ったプログレッシブな映像に使える。ちょっとぼやける。</td>
+</tr>
+
+<tr>
+<td class="left">softskip</td>
+<td class="left">フレームを増減するタイミングを指定できる。基本的に逆テレシネ変換やインターレース解除の直後に記述する。全てのフレームを必要とする <b>逆テレシネ変換より前には絶対に記述しない</b> こと。</td>
+</tr>
+
+<tr>
+<td class="left">scale=512:288</td>
+<td class="left">フレームサイズの変更。</td>
+</tr>
+
+<tr>
+<td class="left">setpts</td>
+<td class="left">PTS (Presentation TimeStamps) を付け直す。PTS に関係するエラーが出たら追加してみる。</td>
+</tr>
+
+<tr>
+<td class="left">harddup</td>
+<td class="left">後で AVI コンテナ以外に入れる場合は <b>必須</b> 。複製フレームを残して映像フレームの減少を防止しないと、だんだん音の遅れが大きくなる。</td>
+</tr>
+
+<tr>
+<td class="left">hqdn3d</td>
+<td class="left">ノイズフィルタ(High precision / Quality version of the DeNoise3D filter)。</td>
+</tr>
+
+<tr>
+<td class="left">eq2=...</td>
+<td class="left">色補正(EQualizer)。コロン ":" で区切って gamma, contrast, brightness, saturation, red_gamma, green_gamma, blue_gamma, weight の順に指定する。バンディング除去のために指定することもある。</td>
+</tr>
+
+<tr>
+<td class="left">unsharp=l3x3:0.3</td>
+<td class="left">アンシャープマスク。lWxH:a:cWxH:a の順。a(amount) の値はプラスだとシャープ、マイナスだとぼかす効果があって、どちらも ±1.5の範囲内を推奨。</td>
+</tr>
+
+<tr>
+<td class="left">gradfun</td>
+<td class="left">バンディング除去。再生向け。</td>
+</tr>
+</tbody>
+</table>
+</li>
+
+<li>再生時にインターレース解除<br >
+  インターレースはブラウン管モニタ向け。
+それ以外ではプログレッシブの方がキレイに見えるハズ。
+ただし、再生時に解除する方がエンコードし直すよりもキレイなので、解除のためだけにエンコードする必要はない。
+再生コマンドは下記。x86 環境なら filmdint も負荷が少なくて良い。
+<div class="org-src-container">
+
+<pre class="src src-sh">mplayer -vf yadif "$1"
+</pre>
+</div>
+</li>
+
+<li>エンコード時にインターレース解除<br >
+  エンコードの前に一度 mplayer で再生して確かめるのが良い。
+pullup でダメなら yadif を指定するのが基本的な流れ。
+pp はベタに重ねるので、動きのある映像が二重になったり、ぼやけたりジャギーになるので基本的に使わない。
+ただし、インターレースの縞模様が残ったプログレッシブな映像には pp=lb が便利。
+pp の概要は下記のコマンドで確認できる。詳細は man コマンドにて。
+<div class="org-src-container">
+
+<pre class="src src-sh">mplayer -pphelp
+</pre>
+</div>
+<p>
+なお、 <b>AVI コンテナ以外を使うなら -vf harddup が必須</b> になる。
+使わない場合、全ての複製フレームが削除されてフレーム数が減るので、音声がだんだん遅れて聞こえる原因になる。
+</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-5" class="outline-2">
+<h2 id="sec-5">NeroAAC (v1.5.1)</h2>
+<div class="outline-text-2" id="text-5">
+</div>
+<div id="outline-container-sec-5-1" class="outline-3">
+<h3 id="sec-5-1">コマンド</h3>
+<div class="outline-text-3" id="text-5-1">
+<ul class="org-ul">
+<li>AAC-LC 品質固定<br >
+  全体的に良好。カットオフ周波数の辺りは多少変化する。
+<div class="org-src-container">
+
+<pre class="src src-sh">mplayer -nocorrect-pts -novideo -ao pcm:fast:file=&gt;(neroAacEnc -ignorelength -lc -q 0.5 -if -of "$2" - 2&gt;nero.log) "$1"
+</pre>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-5-2" class="outline-3">
+<h3 id="sec-5-2">オプション</h3>
+<div class="outline-text-3" id="text-5-2">
+<ul class="org-ul">
+<li>AAC-LC 品質固定時のビットレート<br >
+  あくまでも目安。モノラルだとビットレートは半分になる。
+<table>
+
+
+<colgroup>
+<col  class="right">
+
+<col  class="right">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="right">品質 -q</th>
+<th scope="col" class="right">ビットレート [kbps/2ch]</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="right">0.05</td>
+<td class="right">16</td>
+</tr>
+
+<tr>
+<td class="right">0.15</td>
+<td class="right">33</td>
+</tr>
+
+<tr>
+<td class="right">0.25</td>
+<td class="right">66</td>
+</tr>
+
+<tr>
+<td class="right">0.35</td>
+<td class="right">100</td>
+</tr>
+
+<tr>
+<td class="right">0.45</td>
+<td class="right">146</td>
+</tr>
+
+<tr>
+<td class="right">0.55</td>
+<td class="right">192</td>
+</tr>
+
+<tr>
+<td class="right">0.65</td>
+<td class="right">238</td>
+</tr>
+
+<tr>
+<td class="right">0.75</td>
+<td class="right">285</td>
+</tr>
+
+<tr>
+<td class="right">0.85</td>
+<td class="right">332</td>
+</tr>
+
+<tr>
+<td class="right">0.95</td>
+<td class="right">381</td>
+</tr>
+</tbody>
+</table>
+</li>
+
+<li>プロファイル<br >
+  ビットレートに合わせて自動的に選択されるため、指定なしでも良い。
+<table>
+
+
+<colgroup>
+<col  class="left">
+
+<col  class="left">
+
+<col  class="left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">プロファイル</th>
+<th scope="col" class="left">ビットレート [kbps/2ch]</th>
+<th scope="col" class="left">備考</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">-lc</td>
+<td class="left">80〜</td>
+<td class="left">MAIN プロファイルに劣るけど、HE/HEv2 よりも高品質。192kbps 以上は再生環境次第かも。</td>
+</tr>
+
+<tr>
+<td class="left">-he</td>
+<td class="left">40〜80</td>
+<td class="left">LC プロファイルよりも低ビットレートで音が破綻しにくい。</td>
+</tr>
+
+<tr>
+<td class="left">-hev2</td>
+<td class="left">〜32</td>
+<td class="left">HE プロファイルよりもさらに低ビットレートで音が破綻しにくい。</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-5-3" class="outline-3">
+<h3 id="sec-5-3">周波数解析</h3>
+<div class="outline-text-3" id="text-5-3">
+<p>
+AAC-LC のみ。
+他の周波数解析と同じソース (WAVE, 48000Hz/1ch, 16bit, 768kbps) を使用し、 neroAacEnc -q 0.5 でエンコード。
+</p>
+
+<p>
+<a id="dft_full_nero"></a>
+</p>
+<ul class="org-ul">
+<li>全域<br >
+  全体的に良好。
+線形軸でプロットした差分も小さめ。<br >
+  (see <a href="#dft_full_ffmpeg">FFmpeg</a> / <a href="#dft_full_faac">FAAC</a> / <a href="#dft_full_fdk">FDK AAC</a> / <a href="#dft_full_qaac">qaac</a>)
+<div class="center">
+
+<div class="figure">
+<p><img src="dft_full_neroAacEnc.png" alt="dft_full_neroAacEnc.png">
+</p>
+</div>
+</div>
+</li>
+</ul>
+
+<p>
+<a id="dft_cutoff_nero"></a>
+</p>
+<ul class="org-ul">
+<li>カットオフ周波数<br >
+  キレイにカットしていない (レゾナンスかも?)。
+16kHz を残すなら -q 0.45 くらいが下限になる。
+カットオフ周波数はプロットしたものより細かく調べたけど、-q の値によって少しづつ変化するっぽい。
+(see <a href="#dft_cutoff_ffmpeg">FFmpeg</a> / <a href="#dft_cutoff_faac">FAAC</a> / <a href="#dft_cutoff_fdk">FDK AAC</a> / <a href="#dft_cutoff_qaac">qaac</a>)
+<div class="center">
+
+<div class="figure">
+<p><img src="dft_cutoff_neroAacEnc.png" alt="dft_cutoff_neroAacEnc.png">
+</p>
+</div>
+</div>
+</li>
+</ul>
+
+<p>
+<a id="see_libfaac"></a>
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-6" class="outline-2">
+<h2 id="sec-6">FAAC (v1.28)</h2>
+<div class="outline-text-2" id="text-6">
+</div>
+<div id="outline-container-sec-6-1" class="outline-3">
+<h3 id="sec-6-1">コマンド</h3>
+<div class="outline-text-3" id="text-6-1">
+<ul class="org-ul">
+<li>AAC-LC 品質固定<br >
+  <b>他を推奨。</b> 特に低音が悲しいことになる。
+カットオフ周波数は faac -q 100 と neroAacEnc -q 0.43 で同じくらい。
+<div class="org-src-container">
+
+<pre class="src src-sh">mplayer -nocorrect-pts -novideo -ao pcm:fast:file=&gt;(faac -q 100 -o "$2" - 2&gt;faac.log) "$1"
+</pre>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-6-2" class="outline-3">
+<h3 id="sec-6-2">オプション</h3>
+<div class="outline-text-3" id="text-6-2">
+<ul class="org-ul">
+<li>品質固定に関わる主なものだけ<br >
+  限度を越える値を -q/-c に指定しても、訂正されてエラーにならない。<br >
+<table>
+
+
+<colgroup>
+<col  class="left">
+
+<col  class="left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">オプション</th>
+<th scope="col" class="left">効果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">-q 100</td>
+<td class="left">品質固定でエンコード。10〜500 を指定。デフォルトは 100。44100Hz/2ch の音声に対して 500 を指定すると 320kbps になった。 ( 同じソースで 48000Hz/2ch にすると 450kbps )</td>
+</tr>
+
+<tr>
+<td class="left">-b 128</td>
+<td class="left">平均 128kbps でエンコード。-q の値より優先される。2-pass にはできないので使う理由はない上、"ABR, lower quality mode" と記載されている。-c を指定しない場合、カットオフ周波数の上限が 16000Hz になってしまうので、44100Hz/2ch が 152kbps で頭打ちになる。( 48000Hz/2ch では 163kbps )</td>
+</tr>
+
+<tr>
+<td class="left">-c 16000</td>
+<td class="left">カットオフ周波数 [Hz] を指定。-b を使うなら指定することを推奨。0 は、ソースのサンプリングレートの半分を指定するのと同じになる。-b を指定しない場合に、-c の指定なし、または負の値を指定することで -q の値を式に代入してカットオフ周波数が決定される。上限は -R の値の半分。cutoff [Hz] = (quantqual - 100) * 120 + 16000</td>
+</tr>
+
+<tr>
+<td class="left">-R 44100</td>
+<td class="left">サンプリングレートに 44100Hz を指定。上限は 96000Hz。指定なしでソースと同じになる。FAAC に関わらず、音声はサンプリングレートの 1/2 がカットオフ周波数の上限。下げるときは高音を捨てるつもりで使うこと。</td>
+</tr>
+
+<tr>
+<td class="left">-C 2</td>
+<td class="left">2 チャネルでステレオ音声に指定。指定なしでソースと同じになる。</td>
+</tr>
+</tbody>
+</table>
+</li>
+
+<li>ビットレートの目安<br >
+  あくまでも目安。モノラルだとビットレートは半分になる。
+<table>
+
+
+<colgroup>
+<col  class="right">
+
+<col  class="right">
+
+<col  class="right">
+
+<col  class="left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="right">品質 -q</th>
+<th scope="col" class="right">カットオフ周波数 -c [Hz]</th>
+<th scope="col" class="right">ビットレート [kbps/2ch]</th>
+<th scope="col" class="left">備考</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="right">10</td>
+<td class="right"><i>N/A</i></td>
+<td class="right"><i>N/A</i></td>
+<td class="left">下限</td>
+</tr>
+
+<tr>
+<td class="right">70</td>
+<td class="right">10000</td>
+<td class="right">62</td>
+<td class="left"><i>N/A</i></td>
+</tr>
+
+<tr>
+<td class="right">80</td>
+<td class="right">12000</td>
+<td class="right">79</td>
+<td class="left"><i>N/A</i></td>
+</tr>
+
+<tr>
+<td class="right">90</td>
+<td class="right">14000</td>
+<td class="right">103</td>
+<td class="left"><i>N/A</i></td>
+</tr>
+
+<tr>
+<td class="right">100</td>
+<td class="right">16000</td>
+<td class="right">129</td>
+<td class="left">def</td>
+</tr>
+
+<tr>
+<td class="right">110</td>
+<td class="right">18000</td>
+<td class="right">158</td>
+<td class="left"><i>N/A</i></td>
+</tr>
+
+<tr>
+<td class="right">120</td>
+<td class="right">20000</td>
+<td class="right">194</td>
+<td class="left"><i>N/A</i></td>
+</tr>
+
+<tr>
+<td class="right">130</td>
+<td class="right">22000</td>
+<td class="right">218</td>
+<td class="left"><i>N/A</i></td>
+</tr>
+
+<tr>
+<td class="right">500</td>
+<td class="right"><i>N/A</i></td>
+<td class="right"><i>N/A</i></td>
+<td class="left">上限</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-6-3" class="outline-3">
+<h3 id="sec-6-3">周波数解析</h3>
+<div class="outline-text-3" id="text-6-3">
+<p>
+AAC-LC のみ。
+他の周波数解析と同じソース (WAVE, 48000Hz/1ch, 16bit, 768kbps) を使用し、 faac -q 100 でエンコード。
+</p>
+
+<p>
+<a id="dft_full_faac"></a>
+</p>
+<ul class="org-ul">
+<li>全域<br >
+  特に低音がイマイチ。
+線形軸でプロットした差分のバラツキが大きい。
+(see <a href="#dft_full_ffmpeg">FFmpeg</a> / <a href="#dft_full_nero">NeroAAC</a> / <a href="#dft_full_fdk">FDK AAC</a> / <a href="#dft_full_qaac">qaac</a>)
+<div class="center">
+
+<div class="figure">
+<p><img src="dft_full_faac.png" alt="dft_full_faac.png">
+</p>
+</div>
+</div>
+</li>
+</ul>
+
+<p>
+<a id="dft_cutoff_faac"></a>
+</p>
+<ul class="org-ul">
+<li>カットオフ周波数<br >
+  可聴域を越えても良好。
+カットオフ周波数は、だいたい指定通りになるみたい。
+(see <a href="#dft_cutoff_ffmpeg">FFmpeg</a> / <a href="#dft_cutoff_nero">NeroAAC</a> / <a href="#dft_cutoff_fdk">FDK AAC</a> / <a href="#dft_cutoff_qaac">qaac</a>)
+<div class="center">
+
+<div class="figure">
+<p><img src="dft_cutoff_faac.png" alt="dft_cutoff_faac.png">
+</p>
+</div>
+</div>
+</li>
+</ul>
+
+<p>
+<a id="see_libfdk_aac"></a>
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-7" class="outline-2">
+<h2 id="sec-7">FDK AAC (v0.1.2)</h2>
+<div class="outline-text-2" id="text-7">
+</div>
+<div id="outline-container-sec-7-1" class="outline-3">
+<h3 id="sec-7-1">コマンド</h3>
+<div class="outline-text-3" id="text-7-1">
+<ul class="org-ul">
+<li>fdkaac を使う<br >
+  再現性は良好。
+気に入らなければ NeroAAC を試すといいかも。
+<div class="org-src-container">
+
+<pre class="src src-sh">fdkaac --bandwidth 24000 --bitrate-mode 3 -o "$2" "$1"
+</pre>
+</div>
+</li>
+
+<li>FFmpeg を使う<br >
+  FFmpeg v1.2 以降は <b>20000Hz を越える周波数を残せないので注意。</b>
+<div class="org-src-container">
+
+<pre class="src src-sh">ffmpeg -i "$1" -acodec libfdk_aac -profile:a aac_low -vbr 3 -afterburner 1 -cutoff 16000 "$2"
+</pre>
+</div>
+</li>
+
+<li>付属のサンプルコードを使う<br >
+  不器用なので、fdkaac などを推奨。
+<div class="org-src-container">
+
+<pre class="src src-sh">aac-enc -v 3 -t 2 -afterburner 1 "$1" "$2"
+</pre>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-7-2" class="outline-3">
+<h3 id="sec-7-2">オプション</h3>
+<div class="outline-text-3" id="text-7-2">
+<ul class="org-ul">
+<li>fdkaac に指定するもの<br >
+<table>
+
+
+<colgroup>
+<col  class="left">
+
+<col  class="left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">オプション</th>
+<th scope="col" class="left">効果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">--bitrate-mode 5</td>
+<td class="left">可変ビットレート (VBR)。</td>
+</tr>
+
+<tr>
+<td class="left">--afterburner 1</td>
+<td class="left">良いスケールファクタを探し出すためにデフォルトの 1 を推奨。0 だと荒れることがある。</td>
+</tr>
+
+<tr>
+<td class="left">--bitrate 128</td>
+<td class="left">固定ビットレート (CBR)。 10000 未満だと kbps として扱われる。</td>
+</tr>
+
+<tr>
+<td class="left">--profile 2</td>
+<td class="left">プロファイル。</td>
+</tr>
+
+<tr>
+<td class="left">--bandwith 24000</td>
+<td class="left">カットオフ周波数。</td>
+</tr>
+
+<tr>
+<td class="left">-o "$2"</td>
+<td class="left">出力ファイル名。</td>
+</tr>
+</tbody>
+</table>
+</li>
+
+<li>FFmpeg に指定するもの<br >
+<table>
+
+
+<colgroup>
+<col  class="left">
+
+<col  class="left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">オプション</th>
+<th scope="col" class="left">効果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">-vbr 3</td>
+<td class="left">可変ビットレート (VBR) 。</td>
+</tr>
+
+<tr>
+<td class="left">-afterburner 1</td>
+<td class="left">良いスケールファクタを探し出すためにデフォルトの 1 を推奨。0 だと荒れることがある。</td>
+</tr>
+
+<tr>
+<td class="left">-ab 128k</td>
+<td class="left">固定ビットレート (CBR) なので、低ビットレートには不向き。-vbr を指定すると無視される。</td>
+</tr>
+
+<tr>
+<td class="left">-ac 2</td>
+<td class="left">チャネル数。</td>
+</tr>
+
+<tr>
+<td class="left">-ar 48000</td>
+<td class="left">サンプリングレート。</td>
+</tr>
+
+<tr>
+<td class="left">-profile:a aac_low</td>
+<td class="left">AAC-LC がデフォルト。他にも aac_he/aac_he_v2 などがある。</td>
+</tr>
+
+<tr>
+<td class="left">-cutoff 18000</td>
+<td class="left">カットオフ周波数。FFmpeg (v1.2 以降) では 20000 が上限。</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+可変ビットレートの目安。 <b>FFmpeg v1.2 以降は -cutoff 20000 が上限。</b>
+</p>
+<table>
+
+
+<colgroup>
+<col  class="right">
+
+<col  class="right">
+
+<col  class="left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="right">-vbr</th>
+<th scope="col" class="right">kbps/2ch</th>
+<th scope="col" class="left">備考</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="right">1</td>
+<td class="right">32</td>
+<td class="left">HE-AAC v2 にするなら -profile:a aac_he_v2 を指定。</td>
+</tr>
+
+<tr>
+<td class="right">2</td>
+<td class="right">64</td>
+<td class="left">HE-AAC にするなら -profile:a aac_he を指定。</td>
+</tr>
+
+<tr>
+<td class="right">3</td>
+<td class="right">80-96</td>
+<td class="left">-cutoff 20000 以下の指定を推奨。</td>
+</tr>
+
+<tr>
+<td class="right">4</td>
+<td class="right">128</td>
+<td class="left">-cutoff 20000 以下の指定を推奨。</td>
+</tr>
+
+<tr>
+<td class="right">5</td>
+<td class="right">192</td>
+<td class="left">-cutoff を指定せずに全域を残すならコレ。(FFmpeg v1.2 以降を除く)</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+固定ビットレートの目安。AAC-LC 限定なので注意。
+</p>
+<table>
+
+
+<colgroup>
+<col  class="left">
+
+<col  class="left">
+
+<col  class="right">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">-ab [kbps/2ch]</th>
+<th scope="col" class="left">サンプリングレート [kHz]</th>
+<th scope="col" class="right">元のサンプリングレート [kHz]</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">16.000  -  23.999</td>
+<td class="left">11.025 / 12.00 / 16.00</td>
+<td class="right">12.00</td>
+</tr>
+
+<tr>
+<td class="left">24.000  -  31.999</td>
+<td class="left">16.00</td>
+<td class="right">16.00</td>
+</tr>
+
+<tr>
+<td class="left">32.000  -  39.999</td>
+<td class="left">16.00 / 22.05 / 24.00</td>
+<td class="right">22.05</td>
+</tr>
+
+<tr>
+<td class="left">40.000  -  95.999</td>
+<td class="left">32.00</td>
+<td class="right">32.00</td>
+</tr>
+
+<tr>
+<td class="left">96.000  - 111.999</td>
+<td class="left">32.00 / 44.10 / 48.00</td>
+<td class="right">32.00</td>
+</tr>
+
+<tr>
+<td class="left">112.000 - 320.001</td>
+<td class="left">32.00 / 44.10 / 48.00</td>
+<td class="right">44.10</td>
+</tr>
+
+<tr>
+<td class="left">320.002 - 576.000</td>
+<td class="left">48.00</td>
+<td class="right">48.00</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-7-3" class="outline-3">
+<h3 id="sec-7-3">周波数解析</h3>
+<div class="outline-text-3" id="text-7-3">
+<p>
+AAC-LC のみ。
+他の周波数解析と同じソース (WAVE, 48000Hz/1ch, 16bit, 768kbps) を使用し、 ffmpeg -acodec libfdk_aac -vbr 3 でエンコード。
+</p>
+
+<p>
+<a id="dft_full_fdk"></a>
+</p>
+<ul class="org-ul">
+<li>全域<br >
+  再現性が良好。
+線形軸でプロットした差分はかなり小さい。
+ソースが良質なら再生環境次第と言えるかも。
+(see <a href="#dft_full_ffmpeg">FFmpeg</a> / <a href="#dft_full_nero">NeroAAC</a> / <a href="#dft_full_faac">FAAC</a> / <a href="#dft_full_qaac">qaac</a>)
+<div class="center">
+
+<div class="figure">
+<p><img src="dft_full_libfdk_aac.png" alt="dft_full_libfdk_aac.png">
+</p>
+</div>
+</div>
+</li>
+</ul>
+
+<p>
+<a id="dft_cutoff_fdk"></a>
+</p>
+<ul class="org-ul">
+<li>カットオフ周波数<br >
+  FAAC よりもバッサリ。-vbr 3 は --cutoff 20000 以下の指定を推奨。
+NeroAAC との違いがわかりやすいのは高音。
+FFmpeg v1.2 から --cutoff 22000 の指定はできないことに注意。
+(see <a href="#dft_cutoff_ffmpeg">FFmpeg</a> / <a href="#dft_cutoff_nero">NeroAAC</a> / <a href="#dft_cutoff_faac">FAAC</a> / <a href="#dft_cutoff_qaac">qaac</a>)
+<div class="center">
+
+<div class="figure">
+<p><img src="dft_cutoff_libfdk_aac.png" alt="dft_cutoff_libfdk_aac.png">
+</p>
+</div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-7-4" class="outline-3">
+<h3 id="sec-7-4">バージョン</h3>
+<div class="outline-text-3" id="text-7-4">
+<p>
+v0.1.3 からは 7.1ch が使えるようになった。
+バージョンアップされる毎にビットレートが低減されてるけど、再現性の上限は同じくらい。
+</p>
+
+<ul class="org-ul">
+<li>再現性<br >
+  VBR mode 5 では、 v0.1.(2|3|4) の再現性に大きな差はない。
+低音の再現性は v0.1.(3|4) &gt;= v0.1.2 だけど、中高音の再現性は v0.1.2 &gt;= v0.1.(3|4) になる。
+
+<p>
+VBR mode 3 での再現性は v0.1.2 &gt; v0.1.4 &gt;= v0.1.3 だと考えてる。
+低音の再現性は v0.1.(2|4) &gt;= v0.1.3 だけど、中高音の再現性は v0.1.2 &gt; v0.1.(3|4) になる。
+</p>
+</li>
+
+<li>ビットレート<br >
+  基本的に v0.1.2 &gt; v0.1.3 &gt; v0.1.4 と考えてる。
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-8" class="outline-2">
+<h2 id="sec-8">qaac (v2.58)</h2>
+<div class="outline-text-2" id="text-8">
+</div>
+<div id="outline-container-sec-8-1" class="outline-3">
+<h3 id="sec-8-1">コマンド</h3>
+<div class="outline-text-3" id="text-8-1">
+<ul class="org-ul">
+<li>Wine でエミュレート?<br >
+<div class="org-src-container">
+
+<pre class="src src-sh">wine qaac.exe --tvbr 91 -o "$2" "$1"
+</pre>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-8-2" class="outline-3">
+<h3 id="sec-8-2">オプション</h3>
+<div class="outline-text-3" id="text-8-2">
+<ul class="org-ul">
+<li>qaac に指定するもの<br >
+  ここは最低限しか載せてないけど、他にもいろいろあって便利。
+<table>
+
+
+<colgroup>
+<col  class="left">
+
+<col  class="left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">オプション</th>
+<th scope="col" class="left">効果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">--tvbr 91</td>
+<td class="left">True VBR 0, 9, 18, 27, 36, 45, 54, 64(63), 73, 82, 91, 100, 109, 118, 127</td>
+</tr>
+
+<tr>
+<td class="left">--cvbr 128</td>
+<td class="left">Constrained VBR (kbps)</td>
+</tr>
+
+<tr>
+<td class="left">--abr 128</td>
+<td class="left">ABR (kbps)</td>
+</tr>
+
+<tr>
+<td class="left">--cbr 128</td>
+<td class="left">CBR (kbps)</td>
+</tr>
+
+<tr>
+<td class="left">--lowpass 18000</td>
+<td class="left">カットオフ周波数 (Hz)</td>
+</tr>
+
+<tr>
+<td class="left">--he</td>
+<td class="left">HE-AAC</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-8-3" class="outline-3">
+<h3 id="sec-8-3">周波数解析</h3>
+<div class="outline-text-3" id="text-8-3">
+<p>
+AAC-LC のみ。
+他の周波数解析と同じソース (WAVE, 48000Hz/1ch, 16bit, 768kbps) を使用した。
+wine qaac.exe --tvbr 91 でエンコード。
+qaac v2.58 と CoreAudioToolbox v7.10.5.0 を <b>Wine v1.9.4 でエミュレート?してることに注意。</b>
+当方はエンコーダの提供元が推奨する動作環境を持ってない上、タイトルに反してるので、参考資料として載せたことにしておく。
+</p>
+
+<p>
+<a id="dft_full_qaac"></a>
+</p>
+<ul class="org-ul">
+<li>全域<br >
+  特に --tvbr 91 以上での低音の再現性がすばらしい。
+中高音も良好。
+線形軸でプロットした差分を極めて小さくすることが可能。
+(see <a href="#dft_full_ffmpeg">FFmpeg</a> / <a href="#dft_full_nero">NeroAAC</a> / <a href="#dft_full_faac">FAAC</a> / <a href="#dft_full_fdk">FDK AAC</a>)
+<div class="center">
+
+<div class="figure">
+<p><img src="dft_full_qaac.png" alt="dft_full_qaac.png">
+</p>
+</div>
+</div>
+</li>
+</ul>
+
+<p>
+<a id="dft_cutoff_qaac"></a>
+</p>
+<ul class="org-ul">
+<li>カットオフ周波数<br >
+  余計なことをせずにバッサリ。
+--lowpass は使ってない。
+(see <a href="#dft_cutoff_ffmpeg">FFmpeg</a> / <a href="#dft_cutoff_nero">NeroAAC</a> / <a href="#dft_cutoff_faac">FAAC</a> / <a href="#dft_cutoff_fdk">FDK AAC</a>)
+<div class="center">
+
+<div class="figure">
+<p><img src="dft_cutoff_qaac.png" alt="dft_cutoff_qaac.png">
+</p>
+</div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-8-4" class="outline-3">
+<h3 id="sec-8-4">バージョン</h3>
+<div class="outline-text-3" id="text-8-4">
+<p>
+当方が周波数解析したのは、以下の 32bit 版のみ。他は手元にない。
+<b>Wine でエミュレート?していることに注意。</b>
+</p>
+<table>
+
+
+<colgroup>
+<col  class="left">
+
+<col  class="left">
+
+<col  class="left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">qaac</th>
+<th scope="col" class="left">CoreAudioToolbox</th>
+<th scope="col" class="left">Wine</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">v2.34</td>
+<td class="left">v7.9.8.5</td>
+<td class="left">v1.7.11</td>
+</tr>
+
+<tr>
+<td class="left">v2.44</td>
+<td class="left">v7.9.9.3</td>
+<td class="left">v1.7.30</td>
+</tr>
+
+<tr>
+<td class="left">v2.46</td>
+<td class="left">v7.9.9.4</td>
+<td class="left">v1.7.35</td>
+</tr>
+
+<tr>
+<td class="left">v2.46</td>
+<td class="left">v7.9.9.6</td>
+<td class="left">v1.7.37</td>
+</tr>
+
+<tr>
+<td class="left">v2.58</td>
+<td class="left">v7.10.5.0</td>
+<td class="left">v1.9.4</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+わずかな差だけど、再現性は全域で v7.10.5.0 &gt; v7.9.8.5 &gt;= v7.9.9.(3|4|6) と考えてる。
+</p>
+
+<p>
+FDK AAC と比較すると、--tvbr 127 &gt; FDK AAC (-vbr 5) &gt;&gt; FDK AAC (-vbr 3) &gt; --tvbr 82 になる。
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-9" class="outline-2">
+<h2 id="sec-9">H.265 について</h2>
+<div class="outline-text-2" id="text-9">
+<ul class="org-ul">
+<li>規格<br >
+  HEVC とも呼ばれるけど、このページでは H.265 と記述しておく。
+エンコーダの開発が順調なら、数年でこのページは不要になると期待したい。
+普及しなかったら、ロイヤルティ抗争のおかげ。
+<table>
+
+
+<colgroup>
+<col  class="right">
+
+<col  class="left">
+
+<col  class="left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="right">日付</th>
+<th scope="col" class="left">規格</th>
+<th scope="col" class="left">慨嘆</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="right">2013.01.25</td>
+<td class="left">(ISO/IEC 23008-2)</td>
+<td class="left">H.265 が <a href="http://www.itu.int/net/pressoffice/press_releases/2013/01.aspx">勧告(Recomendation)</a> されたので、HM-10.0 を遊ぶ頃合いかも。</td>
+</tr>
+
+<tr>
+<td class="right">2013.10.18</td>
+<td class="left">(ISO/IEC 23008-2)</td>
+<td class="left">H.265 の教科書がインプレスから発行されたけど、持ってない。</td>
+</tr>
+
+<tr>
+<td class="right">2013.11.25</td>
+<td class="left">ISO/IEC 23008-2:2013</td>
+<td class="left">H.265 の規格書が発行されたけど、買ってない。</td>
+</tr>
+
+<tr>
+<td class="right">2014.04.10</td>
+<td class="left">ISO/IEC 13818-1:2013/Amd 3:2014</td>
+<td class="left">MPEG2 TS の規格書が発行されたけど、試験放送を見てない。</td>
+</tr>
+
+<tr>
+<td class="right">2014.05.12</td>
+<td class="left">ISO/IEC 23009-1:2014</td>
+<td class="left">MPEG-DASH の規格書が発行されたけど、気になる配信を視聴 <del>する環境がない</del> し損ねた。</td>
+</tr>
+
+<tr>
+<td class="right">2014.05.23</td>
+<td class="left">ISO/IEC 23008-1:2014</td>
+<td class="left">MMT の規格書が発行されたけど、パブリックビューイングに行ってない。</td>
+</tr>
+
+<tr>
+<td class="right">2014.06.24</td>
+<td class="left">ISO/IEC 14496-15:2014</td>
+<td class="left">MP4 の規格書が発行されたけど、この先生きのこるエンコーダはどれなのかを知らない。</td>
+</tr>
+
+<tr>
+<td class="right">2014.06.??</td>
+<td class="left">BT.2020-1</td>
+<td class="left">BT.2020 の勧告が出て発行されたので、表示できるモニタが欲しい。</td>
+</tr>
+
+<tr>
+<td class="right">2014.10.28</td>
+<td class="left">HTML5</td>
+<td class="left">HTML5 が勧告されたので、このページだけ移行したけど新しいタグを使ってない。</td>
+</tr>
+
+<tr>
+<td class="right">2015.05.04</td>
+<td class="left">ISO/IEC 23008-2:2015</td>
+<td class="left">H.265 V2 の規格書は発行されたけど CHF、気になります。</td>
+</tr>
+
+<tr>
+<td class="right">2015.05.11</td>
+<td class="left">Ultra HD Blu-ray</td>
+<td class="left">BD (4K) の規格が策定されたのに影が薄い気がするのは、とある技研の公開目録のせいかも。</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<ul class="org-ul">
+<li>実装<br >
+  Linux で利用可能?なモノ。
+<table>
+
+
+<colgroup>
+<col  class="right">
+
+<col  class="left">
+
+<col  class="left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="right">日付</th>
+<th scope="col" class="left">エンコーダ</th>
+<th scope="col" class="left">備考</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="right">2013.07.23</td>
+<td class="left">x265</td>
+<td class="left"><i>N/A</i></td>
+</tr>
+
+<tr>
+<td class="right">2014.01.29</td>
+<td class="left">Kvazaar</td>
+<td class="left"><i>N/A</i></td>
+</tr>
+
+<tr>
+<td class="right">2014.03.23</td>
+<td class="left">FFmpeg (v2.2)</td>
+<td class="left">x265</td>
+</tr>
+
+<tr>
+<td class="right">2014.03.27</td>
+<td class="left">HomerHEVC</td>
+<td class="left"><i>N/A</i></td>
+</tr>
+
+<tr>
+<td class="right"><del>2014.04.07</del></td>
+<td class="left"><del>f265</del></td>
+<td class="left">Lost</td>
+</tr>
+
+<tr>
+<td class="right">2014.04.13</td>
+<td class="left">CCLXV</td>
+<td class="left">停滞?</td>
+</tr>
+
+<tr>
+<td class="right">2014.09.11</td>
+<td class="left">Libav (v11)</td>
+<td class="left">x265</td>
+</tr>
+
+<tr>
+<td class="right">2014.11.22</td>
+<td class="left">HandBrake (v0.10.0)</td>
+<td class="left">x265</td>
+</tr>
+
+<tr>
+<td class="right">2014.12.22</td>
+<td class="left">NVENC (v5.0)</td>
+<td class="left">HW, BETA</td>
+</tr>
+
+<tr>
+<td class="right">2015.05.16</td>
+<td class="left">Avidemux (v2.6.9)</td>
+<td class="left">x265</td>
+</tr>
+
+<tr>
+<td class="right">2015.06.10</td>
+<td class="left">FFmpeg (v2.7)</td>
+<td class="left">HW, nvenc_hevc</td>
+</tr>
+
+<tr>
+<td class="right">2015.09.09</td>
+<td class="left">FFmpeg (v2.8)</td>
+<td class="left">HW, hevc_qsv</td>
+</tr>
+
+<tr>
+<td class="right">2015.09.09</td>
+<td class="left">FFmpeg (v2.8)</td>
+<td class="left">Kvazaar</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<table>
+
+
+<colgroup>
+<col  class="right">
+
+<col  class="left">
+
+<col  class="left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="right">日付</th>
+<th scope="col" class="left">デコーダ</th>
+<th scope="col" class="left">備考</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="right">2013.10.28</td>
+<td class="left">FFmpeg (v2.1)</td>
+<td class="left"><i>N/A</i></td>
+</tr>
+
+<tr>
+<td class="right">2014.03.23</td>
+<td class="left">Libav (v10)</td>
+<td class="left"><i>N/A</i></td>
+</tr>
+
+<tr>
+<td class="right"><del>2015.03.07</del></td>
+<td class="left"><del>FFmpeg (v2.6)</del></td>
+<td class="left"><del>HW, DXVA2</del> Wine v1.7.38 は H.264 まで。</td>
+</tr>
+
+<tr>
+<td class="right">2015.03.09</td>
+<td class="left">libvdpau (v1.0)</td>
+<td class="left">HW, VDPAU</td>
+</tr>
+
+<tr>
+<td class="right">2015.09.09</td>
+<td class="left">FFmpeg (v2.8)</td>
+<td class="left">HW, VAAPI</td>
+</tr>
+
+<tr>
+<td class="right">2015.09.09</td>
+<td class="left">FFmpeg (v2.8)</td>
+<td class="left">HW, VDPAU</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-sec-10" class="outline-2">
+<h2 id="sec-10">参考リンク</h2>
+<div class="outline-text-2" id="text-10">
+<p>
+お世話になっております。
+</p>
+
+<ul class="org-ul">
+<li><a href="http://www.doom9.org/">Doom9</a>
+</li>
+<li><del><a href="http://doom10.org/">Doom10</a></del> 閉鎖
+</li>
+<li><a href="http://www.hydrogenaudio.org/">Hydrogenaudio</a>
+</li>
+<li><a href="https://wiki.videolan.org/X264_TODO/">X264 TODO</a> (VideoLAN Wiki)
+</li>
+<li><del><a href="http://mewiki.project357.com/wiki/X264_Settings">X264 Settings</a></del> 閉鎖
+</li>
+<li><a href="http://www.chaneru.com/Roku/HLS/X264_Settings.htm">X264 Settings</a>
+</li>
+</ul>
+
+
+<ul class="org-ul">
+<li><a href="http://nicowiki.com/?%E6%8B%A1%E5%BC%B5%20x264%20%E5%87%BA%E5%8A%9B%EF%BC%88GUI%EF%BC%89%E3%81%AE%E8%A8%AD%E5%AE%9A%E9%A0%85%E7%9B%AE%E3%81%A8%E3%81%9D%E3%81%AE%E6%A9%9F%E8%83%BD%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6">拡張 x264 出力（GUI）の設定項目とその機能について - ニコニコ動画まとめwiki</a>
+</li>
+<li><a href="http://mobilehackerz.jp/archive/wiki/index.php?MobileHackerz">MobileHackerz Knowledgebase Wiki</a>
+</li>
+<li><a href="http://up-cat.net/">猫科研究所(felid labo)</a>
+</li>
+<li><a href="http://d.hatena.ne.jp/kamedo2/">音風景ブログ</a>
+</li>
+<li><a href="http://looooooooop.blog35.fc2.com/">ニコニコ動画研究所</a> (2015.10.19 下記のニコラボへ移転)
+</li>
+<li><a href="http://nico-lab.net/">ニコラボ</a> (カテゴリの FFmpeg などを参照)
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-11" class="outline-2">
+<h2 id="sec-11">ライセンス</h2>
+<div class="outline-text-2" id="text-11">
+<p>
+このページは、当方の勝手な解釈を淡々と羅列したものです。
+正確さを期待しないでください。
+</p>
+
+<p>
+  <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/deed.ja"><img alt="クリエイティブ・コモンズ・ライセンス" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/3.0/88x31.png" /></a><br />この 作品 は <a rel="license" href="https://creativecommons.org/licenses/by-sa/3.0/deed.ja">クリエイティブ・コモンズ 表示 - 継承 3.0 非移植 ライセンスの下に提供されています。</a>
+</p>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: <a href="https://twitter.com/ebdamdye">ebdamDye</a></p>
+<p class="email">Email: <a href="mailto:ｅｂｄａｍＤｙｅ＠ｅｘｃｉｔｅ．ｃｏ．ｊｐ">ｅｂｄａｍＤｙｅ＠ｅｘｃｉｔｅ．ｃｏ．ｊｐ</a></p>
+<p class="date">Created: 2016-03-08 Tue 22:04:55 +0900</p>
+<p class="creator"><a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.5.1 (<a href="http://orgmode.org">Org</a> mode 8.2.10)</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,320 @@
+/*
+ * Public スタイルシート
+ */
+
+/* 文書全体 */
+html {
+    font-family:'Lucida Grande', Meiryo, sans-serif;
+}
+body {
+    color: black;
+    background-color: white;
+    line-height: 1.3;  /* IE 8 では "1.3" と "130%" と "1.3em" とで <h1> などの出力が異なるので注意 */
+    -webkit-text-size-adjust: 100%;
+}
+
+/* リンク */
+a:link {
+    color: #c00000;
+}
+a:visited {
+    color: #400000;
+}
+a:active {
+    color: #ff0000;
+}
+a:hover {
+    color: #ff0000;
+}
+
+/* タイトル */
+h1.title {
+    color: white;
+    background-color: #c00000;
+    text-align: left;
+    padding: 0.1em 0.3em;
+}
+
+/* 目次 */
+div#text-table-of-contents ul, li {
+    padding: 0;
+    border: 0;
+    margin:0;
+}
+
+/* 見出し */
+h2, h3, h4, h5, h6 {
+    padding: 0.2em 0.3em;
+}
+h4, h5, h6 {
+    font-size: 1em;  /* ブラウザによっては本文よりも小さくなってしまうので */
+}
+h5, h6 {
+    margin: 0.5em;
+}
+h2 {
+    border-left: 16px solid #c00000;
+    border-bottom: 3px solid #c00000;
+}
+h3 {
+    margin-left: 0.75em;
+    border-left: 8px solid #d8d8d8;
+    border-bottom: 2px dotted #d8d8d8;
+}
+h4 {
+    border-bottom: 1px solid black;
+}
+h5 {
+    border-bottom: 1px solid #c0c0c0;
+}
+h6 {
+    border-bottom: 1px dotted #c0c0c0;
+}
+span.section-number-2, span.section-number-3, span.section-number-4, span.section-number-5, span.section-number-6 {
+    color: #c00000;
+}
+
+/* 本文 */
+div.outline-text-2, div.outline-text-3, div.outline-text-4 {
+    margin: 1em;
+}
+div.outline-text-5, div.outline-text-6 {
+    margin: 1em 1.5em;
+}
+
+/* 文字装飾 */
+b {
+    color: #c00000;
+}
+i {
+    color: #608080;
+}
+code {
+    color: #600000;
+}
+del {
+    color: #608080;
+}
+
+/* 画像 */
+p img {
+    border: none;
+    max-width: 100%;
+    height: auto;
+}
+img.figure {  /* 図としての画像 */
+    display: block;
+    margin: 1em auto;
+    border: 1px dotted #c00000;
+}
+
+/* ソース、例文 */
+pre {
+    font-family: monospace;
+    margin: 0.5em;
+    padding: 0.5em;
+    overflow: auto;
+    white-space: normal;
+}
+pre.src {
+    color: #202020;
+    background-color: #f0d0d0;
+    border-top: 0;
+    border-left: 0;
+    border-bottom: 0;
+    border-right: 0;
+}
+pre.example {
+    color: #202020;
+    background-color: #f0d0d0;
+    border-top: 0;
+    border-left: 0;
+    border-bottom: 0;
+    border-right: 0;
+}
+
+/* テーブル */
+table {
+    margin-bottom: 1em;
+    border-collapse: collapse;
+}
+thead {
+    color: white;
+    background-color: #c00000;
+    border: 0 !important;
+}
+tbody {
+    background-color: #f0f0f0;
+    border: 0 !important;
+}
+table, th, td {
+    border: 0 !important;
+}
+th, td {
+    padding: 0.5em;
+    border: 0 !important;
+}
+th {
+    font-weight: bold;
+}
+
+caption {
+    color: #c00000;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+/* リスト */
+ol, ul {
+    padding-left: 1.5em;
+}
+ol li {
+    padding-left: 0.5em;
+}
+ol li ol li{
+    padding-left: 0em;
+}
+ul li {
+    padding-bottom: 0.5em;
+}
+ul li ul li {
+    padding-bottom: 0;
+}
+dt {
+    font-weight: normal;
+    border-left: 0.5em solid #c00000;
+    border-bottom: 1px dotted #c00000;
+    padding-left: 0.3em;
+    margin: 0.3em 0em;
+    width: 50%;
+}
+
+/* 水平線 */
+hr {
+    height: 1px;
+    background-color: #c00000;
+    border-style: none;
+}
+
+/* フッタ */
+div#postamble {
+    text-align: right;
+    font-size: smaller;
+    border-top: 2px solid #808080;
+    padding: 1em 0em;
+}
+div#postamble p {
+    margin: 0.2em 0em;
+}
+p.creator {
+    color: #a0a0a0;
+}
+
+/*
+ * スマホ向け (1em = 16px を想定)
+ * @media: CSS Values and Units Module Level 3
+ * nth-child: Selectors Level 3
+ */
+@media (max-width: 480px) { /* 30em */
+    /* 目次 */
+    div#table-of-contents h2 {
+        display: block;
+    }
+    div#text-table-of-contents li {
+        display: inline-block;
+        padding: 0 0 0.5em 0.5em;
+    }
+    div#text-table-of-contents ul ul {
+        display: none;
+    }
+
+    /* テーブル */
+    table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 0.5em;
+    }
+    th:nth-child(1), td:nth-child(1) {
+        display: block;
+        color: white;
+        background-color: #c00000;
+        font-weight: bold;
+    }
+    th:nth-child(n+2), td:nth-child(n+2) {
+        display: block;
+        color: black;
+        background-color: #f0f0f0;
+        font-weight: normal;
+    }
+}
+@media (min-width: 481px) and (max-width: 640px) { /* 40em */
+    /* 文書全体 */
+    body {
+        margin-top: 4.5em;
+    }
+
+    /* 目次 */
+    div#table-of-contents {
+        position: fixed;
+        overflow: auto;
+        top: 0;
+        left: 0;
+        min-height: 3.5em;
+        width: 100%;
+        background-color: #e8e8e8;
+    }
+    div#table-of-contents h2 {
+        display: none; /* "Table of Contents" という見出しを削除 */
+    }
+    div#text-table-of-contents li {
+        display: inline-block;
+        padding: 0 0.5em;
+        font-size: small;
+    }
+    div#text-table-of-contents ul ul {
+        display: none;
+    }
+}
+
+/*
+ * PC 向け (1em = 16px を想定)
+ * CSS Values and Units Module Level 3
+ */
+@media (min-width: 641px) { /* 40em over */
+    /* 文書全体 */
+    body {
+        margin-left: 11.5em;
+    }
+
+    /* 目次 */
+    div#table-of-contents {
+        position: fixed;
+        overflow: auto;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 10.5em;
+        background-color: #e8e8e8;
+    }
+    div#table-of-contents h2 {
+        border-left: 8px solid #c00000;
+        font-size: small;
+    }
+    div#text-table-of-contents {
+        font-size: small;
+    }
+    div#text-table-of-contents ul li {
+        list-style-type: none;
+        padding-left: 1em;
+        padding-bottom: 0.25em;
+    }
+    div#text-table-of-contents ul li ul li {
+        padding-bottom: 0;
+    }
+
+    /* リスト */
+    ol, ul {
+        padding-left: 2em;
+    }
+}
+
